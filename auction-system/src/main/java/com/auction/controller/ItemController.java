@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -71,10 +72,22 @@ public class ItemController {
     }
 
     @PostMapping
-    public ResponseEntity<ItemDto> createItem(
-            @Valid @RequestBody Item item,
-            @RequestParam Long sellerId,
-            @RequestParam(required = false) Long categoryId) {
+    public ResponseEntity<ItemDto> createItem(@RequestBody Map<String, Object> request) {
+        String title = (String) request.get("title");
+        String description = (String) request.getOrDefault("description", "");
+        String imageUrl = (String) request.getOrDefault("imageUrl", "");
+        Double startingPrice = Double.valueOf(request.get("startingPrice").toString());
+        String itemStatusStr = (String) request.getOrDefault("itemStatus", "DRAFT");
+        Long sellerId = Long.valueOf(request.get("sellerId").toString());
+        Long categoryId = request.get("categoryId") != null ? Long.valueOf(request.get("categoryId").toString()) : null;
+
+        Item item = new Item();
+        item.setTitle(title);
+        item.setDescription(description);
+        item.setImageUrl(imageUrl);
+        item.setStartingPrice(java.math.BigDecimal.valueOf(startingPrice));
+        item.setItemStatus(Item.ItemStatus.valueOf(itemStatusStr));
+
         Item createdItem = itemService.createItem(item, sellerId, categoryId);
         return new ResponseEntity<>(ItemDto.fromEntity(createdItem), HttpStatus.CREATED);
     }

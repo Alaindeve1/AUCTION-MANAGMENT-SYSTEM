@@ -18,7 +18,7 @@ import * as Yup from 'yup';
 import DataTable from '../../components/common/DataTable';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
-import { hasRole } from '../../utils/auth';
+import { hasRole } from '../../utils/auth.jsx';
 
 const validationSchema = Yup.object({
   username: Yup.string().required('Username is required'),

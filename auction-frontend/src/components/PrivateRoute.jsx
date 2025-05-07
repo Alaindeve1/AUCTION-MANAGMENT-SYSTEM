@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { Box, CircularProgress } from '@mui/material';
 import api from '../utils/api';
 
 const PrivateRoute = ({ children }) => {
@@ -40,9 +41,16 @@ const PrivateRoute = ({ children }) => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      </div>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+        }}
+      >
+        <CircularProgress />
+      </Box>
     );
   }
 

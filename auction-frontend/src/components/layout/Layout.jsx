@@ -25,7 +25,7 @@ import {
   AccountCircle as AccountIcon,
   Logout as LogoutIcon,
 } from '@mui/icons-material';
-import { logout } from '../../utils/auth';
+import { logout } from '../../utils/auth.jsx';
 
 const drawerWidth = 240;
 

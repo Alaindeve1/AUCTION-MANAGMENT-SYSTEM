@@ -1,55 +1,91 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createRoutesFromElements, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
-
-// Layout
+import { AuthProvider } from './utils/auth';
 import Layout from './components/Layout';
-
-// Auth Pages
 import Login from './pages/auth/Login';
-import SignUp from './pages/auth/SignUp';
+import Signup from './pages/auth/Signup';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
 import VerifyEmail from './pages/auth/VerifyEmail';
-
-// Main Pages
-import Dashboard from './pages/Dashboard';
-import Items from './pages/Items';
-import Categories from './pages/Categories';
-import Users from './pages/Users';
-import AuctionResults from './pages/AuctionResults';
-import Bids from './pages/Bids';
-import Profile from './pages/Profile';
-
-// Auth Guard
 import PrivateRoute from './components/PrivateRoute';
+import LandingPage from './pages/LandingPage';
+import { AdminAuthProvider } from './admin/AdminAuthContext';
+import AdminLoginPage from './admin/AdminLoginPage';
+import AdminProtectedRoute from './admin/AdminProtectedRoute';
+import AdminLayout from './admin/AdminLayout';
+import AdminDashboard from './admin/AdminDashboard';
+import AdminCategoriesPage from './admin/AdminCategoriesPage';
+import AdminResultsPage from './admin/AdminResultsPage';
+import AdminBidsPage from './admin/AdminBidsPage';
+import AdminUsersPage from './admin/AdminUsersPage';
+import AdminItemsPage from './admin/AdminItemsPage';
+
+// Test component
+const TestComponent = () => {
+  return (
+    <div style={{ padding: '20px' }}>
+      <h1>Test Component</h1>
+      <p>If you can see this, the basic routing is working.</p>
+    </div>
+  );
+};
 
 const queryClient = new QueryClient();
+
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <Route>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
+      
+      {/* Protected User Routes */}
+      <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
+        <Route path="/dashboard" element={<div>Dashboard Content</div>} />
+        <Route path="/profile" element={<div>Profile Content</div>} />
+        <Route path="/items" element={<div>Items Content</div>} />
+        <Route path="/categories" element={<div>Categories Content</div>} />
+        <Route path="/bids" element={<div>Bids Content</div>} />
+        <Route path="/auction-results" element={<div>Auction Results Content</div>} />
+        <Route path="/settings" element={<div>Settings Content</div>} />
+        <Route path="/help" element={<div>Help Content</div>} />
+      </Route>
+
+      {/* Admin Routes */}
+      <Route path="/admin/login" element={<AdminLoginPage />} />
+      <Route path="/admin" element={<AdminProtectedRoute><AdminLayout /></AdminProtectedRoute>}>
+        <Route index element={<AdminDashboard />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="users" element={<AdminUsersPage />} />
+        <Route path="items" element={<AdminItemsPage />} />
+        <Route path="categories" element={<AdminCategoriesPage />} />
+        <Route path="bids" element={<AdminBidsPage />} />
+        <Route path="results" element={<AdminResultsPage />} />
+      </Route>
+    </Route>
+  ),
+  {
+    future: {
+      v7_relativeSplatPath: true,
+      v7_startTransition: true
+    }
+  }
+);
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Toaster position="top-right" />
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/verify-email" element={<VerifyEmail />} />
-
-        {/* Protected Routes */}
-        <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/items" element={<Items />} />
-          <Route path="/categories" element={<Categories />} />
-          <Route path="/users" element={<Users />} />
-          <Route path="/auction-results" element={<AuctionResults />} />
-          <Route path="/bids" element={<Bids />} />
-          <Route path="/profile" element={<Profile />} />
-        </Route>
-      </Routes>
+      <AuthProvider>
+        <AdminAuthProvider>
+          <RouterProvider router={router} />
+        </AdminAuthProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

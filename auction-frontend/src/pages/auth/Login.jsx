@@ -52,7 +52,7 @@ const Login = () => {
 
       {error && (
         <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg animate-fade-in">
-          <p className="text-red-700">{error}</p>
+          <p className="text-red-700">{typeof error === 'object' ? (error.message || JSON.stringify(error)) : error}</p>
         </div>
       )}
 
