@@ -16,10 +16,11 @@ const AdminItemsPage = () => {
     title: '',
     categoryId: '',
     price: '',
-    status: 'DRAFT',
+    itemStatus: 'DRAFT',
     description: '',
-    startDate: new Date().toISOString().split('T')[0],
-    endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    imageUrl: '',
+    startDate: new Date().toISOString().slice(0, 16),
+    endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16)
   });
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState(null);
@@ -50,10 +51,11 @@ const AdminItemsPage = () => {
       title: '',
       categoryId: '',
       price: '',
-      status: 'DRAFT',
+      itemStatus: 'DRAFT',
       description: '',
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      imageUrl: '',
+      startDate: new Date().toISOString().slice(0, 16),
+      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16)
     });
     setShowModal(true);
     setFormError(null);
@@ -65,10 +67,11 @@ const AdminItemsPage = () => {
       title: item.title || '',
       categoryId: item.category?.categoryId || item.categoryId || '',
       price: item.price || item.startingPrice || '',
-      status: item.status || item.itemStatus || 'DRAFT',
+      itemStatus: item.itemStatus || 'DRAFT',
       description: item.description || '',
-      startDate: item.startDate || new Date().toISOString().split('T')[0],
-      endDate: item.endDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      imageUrl: item.imageUrl || '',
+      startDate: item.startDate ? item.startDate.split('T')[0] : new Date().toISOString().split('T')[0],
+      endDate: item.endDate ? item.endDate.split('T')[0] : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
     });
     setShowModal(true);
     setFormError(null);
@@ -91,6 +94,45 @@ const AdminItemsPage = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setFormError('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setFormError('Image size should be less than 5MB');
+      return;
+    }
+
+    setFormLoading(true);
+    setFormError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const res = await axios.post('/api/items/upload-image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${admin?.token}`
+        }
+      });
+      
+      setForm({ ...form, imageUrl: res.data });
+    } catch (err) {
+      console.error('Upload error:', err);
+      setFormError(err.response?.data || 'Failed to upload image');
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     setFormLoading(true);
@@ -101,10 +143,10 @@ const AdminItemsPage = () => {
         description: form.description,
         categoryId: parseInt(form.categoryId),
         startingPrice: parseFloat(form.price),
-        status: form.status,
-        sellerId: admin?.userId,
-        startDate: form.startDate,
-        endDate: form.endDate
+        itemStatus: form.itemStatus,
+        imageUrl: form.imageUrl,
+        startDate: form.startDate ? new Date(form.startDate).toISOString() : undefined,
+        endDate: form.endDate ? new Date(form.endDate).toISOString() : undefined
       };
 
       if (editItem) {
@@ -146,32 +188,58 @@ const AdminItemsPage = () => {
         <div className="text-center py-8 text-red-600">{error}</div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-white rounded-xl shadow">
-            <thead>
-              <tr className="bg-indigo-50 text-indigo-700">
-                <th className="px-4 py-2 text-left">Title</th>
-                <th className="px-4 py-2 text-left">Category</th>
-                <th className="px-4 py-2 text-left">Status</th>
-                <th className="px-4 py-2 text-left">Price</th>
-                <th className="px-4 py-2 text-left">Actions</th>
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody>
-              {items.map(item => (
-                <tr key={item.itemId} className="border-b">
-                  <td className="px-4 py-2">{item.title}</td>
-                  <td className="px-4 py-2">{item.category?.categoryName || '-'}</td>
-                  <td className="px-4 py-2">{item.status || item.itemStatus}</td>
-                  <td className="px-4 py-2">${item.price || item.startingPrice}</td>
-                  <td className="px-4 py-2 space-x-2">
+            <tbody className="bg-white divide-y divide-gray-200">
+              {items.map((item) => (
+                <tr key={item.itemId}>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {item.imageUrl ? (
+                      <img 
+                        src={item.imageUrl} 
+                        alt={item.title} 
+                        className="h-16 w-16 object-cover rounded"
+                      />
+                    ) : (
+                      <div className="h-16 w-16 bg-gray-200 rounded flex items-center justify-center">
+                        <span className="text-gray-400">No image</span>
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">{item.title}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{item.category?.categoryName || 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                      item.itemStatus === 'ACTIVE' ? 'bg-green-100 text-green-800' :
+                      item.itemStatus === 'SOLD' ? 'bg-blue-100 text-blue-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {item.itemStatus}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">${item.startingPrice}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
                       onClick={() => handleEdit(item)}
-                      className="px-3 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
-                    >Edit</button>
+                      className="text-indigo-600 hover:text-indigo-900 mr-4"
+                    >
+                      Edit
+                    </button>
                     <button
                       onClick={() => handleDelete(item.itemId)}
-                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                    >Delete</button>
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -235,11 +303,32 @@ const AdminItemsPage = () => {
                   step="0.01"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="mb-2"
+                  disabled={formLoading}
+                />
+                <input
+                  type="text"
+                  name="imageUrl"
+                  value={form.imageUrl}
+                  onChange={handleFormChange}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="https://..."
+                />
+                {form.imageUrl && (
+                  <img src={form.imageUrl} alt="Preview" className="mt-2 max-h-32 rounded shadow" />
+                )}
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
                   <input
-                    type="date"
+                    type="datetime-local"
                     name="startDate"
                     value={form.startDate}
                     onChange={handleFormChange}
@@ -250,7 +339,7 @@ const AdminItemsPage = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
                   <input
-                    type="date"
+                    type="datetime-local"
                     name="endDate"
                     value={form.endDate}
                     onChange={handleFormChange}
@@ -262,8 +351,8 @@ const AdminItemsPage = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                 <select
-                  name="status"
-                  value={form.status}
+                  name="itemStatus"
+                  value={form.itemStatus}
                   onChange={handleFormChange}
                   className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   required

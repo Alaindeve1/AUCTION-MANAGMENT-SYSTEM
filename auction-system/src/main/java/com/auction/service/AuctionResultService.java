@@ -73,8 +73,9 @@ public class AuctionResultService {
             auctionResult.setFinalPrice(highestBid.get().getBidAmount());
             auctionResult.setResultStatus(AuctionResult.ResultStatus.PENDING);
 
-            // Update item status to SOLD
+            // Update item status to SOLD and set seller to winner
             item.setItemStatus(Item.ItemStatus.SOLD);
+            item.setSeller(highestBid.get().getBidder());
             itemRepository.save(item);
         } else {
             // No bids were placed

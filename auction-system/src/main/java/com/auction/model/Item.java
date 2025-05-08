@@ -35,7 +35,7 @@ public class Item {
     private Long itemId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "seller_id", nullable = false)
+    @JoinColumn(name = "seller_id", nullable = true)
     private User seller;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -91,4 +91,29 @@ public class Item {
     public enum ItemStatus {
         DRAFT, ACTIVE, ENDED, SOLD
     }
+
+    public Long getItemId() { return itemId; }
+    public void setItemId(Long itemId) { this.itemId = itemId; }
+    public User getSeller() { return seller; }
+    public void setSeller(User seller) { this.seller = seller; }
+    public Category getCategory() { return category; }
+    public void setCategory(Category category) { this.category = category; }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+    public BigDecimal getStartingPrice() { return startingPrice; }
+    public void setStartingPrice(BigDecimal startingPrice) { this.startingPrice = startingPrice; }
+    public ItemStatus getItemStatus() { return itemStatus; }
+    public void setItemStatus(ItemStatus itemStatus) { this.itemStatus = itemStatus; }
+    public LocalDateTime getStartDate() { return startDate; }
+    public void setStartDate(LocalDateTime startDate) { this.startDate = startDate; }
+    public LocalDateTime getEndDate() { return endDate; }
+    public void setEndDate(LocalDateTime endDate) { this.endDate = endDate; }
+    public List<Bid> getBids() { return bids; }
+    public void setBids(List<Bid> bids) { this.bids = bids; }
+    public AuctionResult getAuctionResult() { return auctionResult; }
+    public void setAuctionResult(AuctionResult auctionResult) { this.auctionResult = auctionResult; }
 }

@@ -43,9 +43,11 @@ public class ItemDto {
     
     // Static method to convert Item entity to ItemDto
     public static ItemDto fromEntity(Item item) {
+        Long sellerId = item.getSeller() != null ? item.getSeller().getUserId() : null;
+        String sellerUsername = item.getSeller() != null ? item.getSeller().getUsername() : null;
         ItemDto dto = new ItemDto(
             item.getItemId(),
-            item.getSeller().getUserId(),
+            sellerId,
             item.getCategory() != null ? item.getCategory().getCategoryId() : null,
             item.getTitle(),
             item.getStartingPrice(),
@@ -53,9 +55,7 @@ public class ItemDto {
             item.getStartDate(),
             item.getEndDate()
         );
-        
-        // Set additional fields
-        dto.setSellerUsername(item.getSeller().getUsername());
+        dto.setSellerUsername(sellerUsername);
         if (item.getCategory() != null) {
             dto.setCategoryName(item.getCategory().getCategoryName());
         }

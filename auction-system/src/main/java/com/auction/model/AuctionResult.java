@@ -55,4 +55,15 @@ public class AuctionResult {
     public enum ResultStatus {
         PENDING, COMPLETED, CANCELLED
     }
+
+    public Long getResultId() { return resultId; }
+    public void setResultId(Long resultId) { this.resultId = resultId; }
+    public Item getItem() { return item; }
+    public void setItem(Item item) { this.item = item; }
+    public User getWinner() { return winner; }
+    public void setWinner(User winner) { this.winner = winner; }
+    public BigDecimal getFinalPrice() { return finalPrice; }
+    public void setFinalPrice(BigDecimal finalPrice) { this.finalPrice = finalPrice; }
+    public ResultStatus getResultStatus() { return resultStatus; }
+    public void setResultStatus(ResultStatus resultStatus) { this.resultStatus = resultStatus; }
 }

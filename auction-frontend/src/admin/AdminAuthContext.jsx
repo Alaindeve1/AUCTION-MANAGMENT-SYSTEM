@@ -14,6 +14,7 @@ export const useAdminAuth = () => {
 export const AdminAuthProvider = ({ children }) => {
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
@@ -43,9 +44,18 @@ export const AdminAuthProvider = ({ children }) => {
       const { token, ...adminData } = response.data;
       localStorage.setItem('adminToken', token);
       setAdmin({ ...adminData, token });
+      setError(null);
       return true;
     } catch (error) {
       console.error('Admin login failed:', error);
+      if (error.response?.status === 403) {
+        setError('Not authorized as admin');
+      } else if (error.response?.status === 401) {
+        setError('Invalid credentials');
+      } else {
+        const errorMessage = error.response?.data?.message || error.response?.data || 'Login failed. Please try again.';
+        setError(typeof errorMessage === 'string' ? errorMessage : 'Login failed. Please try again.');
+      }
       return false;
     }
   };
@@ -58,6 +68,7 @@ export const AdminAuthProvider = ({ children }) => {
   const value = {
     admin,
     loading,
+    error,
     login,
     logout
   };

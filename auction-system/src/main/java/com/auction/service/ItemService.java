@@ -55,49 +55,34 @@ public class ItemService {
     }
 
     @Transactional
-    public Item createItem(Item item, Long sellerId, Long categoryId) {
-        User seller = userRepository.findById(sellerId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + sellerId));
-        
+    public Item createItem(Item item, Long categoryId) {
         Category category = null;
         if (categoryId != null) {
             category = categoryRepository.findById(categoryId)
                     .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + categoryId));
         }
-        
-        item.setSeller(seller);
         item.setCategory(category);
-        
         // Set initial status
         item.setItemStatus(Item.ItemStatus.DRAFT);
-        
+        // Do not set seller here
         return itemRepository.save(item);
     }
 
     @Transactional
     public Item updateItem(Long itemId, Item itemDetails) {
         Item item = getItemById(itemId);
-        
-        item.setTitle(itemDetails.getTitle());
-        item.setDescription(itemDetails.getDescription());
-        item.setImageUrl(itemDetails.getImageUrl());
-        item.setStartingPrice(itemDetails.getStartingPrice());
-        
-        if (itemDetails.getCategory() != null) {
+        if (itemDetails.getTitle() != null) item.setTitle(itemDetails.getTitle());
+        if (itemDetails.getDescription() != null) item.setDescription(itemDetails.getDescription());
+        if (itemDetails.getImageUrl() != null) item.setImageUrl(itemDetails.getImageUrl());
+        if (itemDetails.getStartingPrice() != null) item.setStartingPrice(itemDetails.getStartingPrice());
+        if (itemDetails.getCategory() != null && itemDetails.getCategory().getCategoryId() != null) {
             Category category = categoryRepository.findById(itemDetails.getCategory().getCategoryId())
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Category not found with id: " + itemDetails.getCategory().getCategoryId()));
             item.setCategory(category);
         }
-        
-        if (itemDetails.getStartDate() != null) {
-            item.setStartDate(itemDetails.getStartDate());
-        }
-        
-        if (itemDetails.getEndDate() != null) {
-            item.setEndDate(itemDetails.getEndDate());
-        }
-        
+        if (itemDetails.getStartDate() != null) item.setStartDate(itemDetails.getStartDate());
+        if (itemDetails.getEndDate() != null) item.setEndDate(itemDetails.getEndDate());
         return itemRepository.save(item);
     }
 

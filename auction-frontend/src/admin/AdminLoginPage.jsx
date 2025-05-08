@@ -6,23 +6,19 @@ const AdminLoginPage = () => {
   const { login, error, loading } = useAdminAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [formError, setFormError] = useState(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setFormError(null);
     const success = await login(username, password);
     if (success) {
       navigate('/admin/dashboard');
-    } else {
-      setFormError('Invalid credentials or not authorized.');
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-600 to-purple-600">
-      <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md animate-fade-in">
+      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
         <h2 className="text-2xl font-bold text-center text-indigo-700 mb-6">Admin Login</h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -45,9 +41,9 @@ const AdminLoginPage = () => {
               required
             />
           </div>
-          {(formError || error) && (
+          {error && (
             <div className="bg-red-100 text-red-700 px-4 py-2 rounded-lg text-sm animate-fade-in">
-              {formError || error}
+              {error}
             </div>
           )}
           <button

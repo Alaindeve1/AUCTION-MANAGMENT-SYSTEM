@@ -5,7 +5,7 @@ import { useAdminAuth } from './AdminAuthContext';
 const AdminUsersPage = () => {
   const { admin } = useAdminAuth();
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('all');
@@ -17,64 +17,78 @@ const AdminUsersPage = () => {
     activeBids: 0
   });
 
-  // Fetch users from backend
+  const fetchUsers = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await axios.get('/api/admin/users', {
+        headers: { Authorization: `Bearer ${admin?.token}` }
+      });
+      setUsers(res.data || []);
+    } catch (err) {
+      setError('Failed to load users.');
+      console.error('Failed to load users:', err);
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const fetchUsers = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await axios.get('/api/admin/users', {
-          headers: { Authorization: `Bearer ${admin?.token}` },
-          params: {
-            search: searchTerm || undefined,
-            role: filterRole !== 'all' ? filterRole : undefined
-          }
-        });
-        setUsers(res.data);
-      } catch (err) {
-        setError('Failed to load users.');
-      }
-      setLoading(false);
-    };
-    if (admin?.token) fetchUsers();
-  }, [admin, searchTerm, filterRole]);
+    fetchUsers();
+  }, []);
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
   };
 
   const handleViewUser = async (user) => {
+    if (!user?.userId) return;
+    
     setSelectedUser(user);
     try {
-      const stats = await axios.get(`/api/admin/users/${user.id}/stats`, {
+      const stats = await axios.get(`/api/admin/users/${user.userId}/stats`, {
         headers: { Authorization: `Bearer ${admin?.token}` }
       });
-      setUserStats(stats.data);
+      setUserStats(stats.data || {
+        totalBids: 0,
+        wonAuctions: 0,
+        activeBids: 0
+      });
       setShowModal(true);
     } catch (err) {
       console.error('Failed to load user stats:', err);
+      setUserStats({
+        totalBids: 0,
+        wonAuctions: 0,
+        activeBids: 0
+      });
+      setShowModal(true);
     }
   };
 
-  const handleToggleUserStatus = async (userId, currentStatus) => {
-    try {
-      await axios.put(`/api/admin/users/${userId}/status`, {
-        status: currentStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE'
-      }, {
-        headers: { Authorization: `Bearer ${admin?.token}` }
-      });
-      // Update local state
-      setUsers(users.map(user => 
-        user.id === userId 
-          ? { ...user, status: currentStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE' }
-          : user
-      ));
-    } catch (err) {
-      console.error('Failed to update user status:', err);
+  const handleDeleteUser = async (userId) => {
+    if (!userId) return;
+    
+    if (window.confirm('Are you sure you want to delete this user?')) {
+      try {
+        const response = await axios.delete(`/api/admin/users/${userId}`, {
+          headers: { Authorization: `Bearer ${admin?.token}` }
+        });
+        
+        if (response.status === 200) {
+          setUsers(users.filter(user => user?.userId !== userId));
+          setError(null);
+        } else {
+          setError('Failed to delete user. Please try again.');
+        }
+      } catch (err) {
+        console.error('Failed to delete user:', err);
+        setError('Failed to delete user. Please try again.');
+      }
     }
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -82,8 +96,22 @@ const AdminUsersPage = () => {
     });
   };
 
+  const filteredUsers = users.filter(user => {
+    if (!user) return false;
+    
+    const username = user.username?.toLowerCase() || '';
+    const email = user.email?.toLowerCase() || '';
+    const searchTermLower = searchTerm.toLowerCase();
+    
+    const matchesSearch = username.includes(searchTermLower) || 
+                         email.includes(searchTermLower);
+    const matchesRole = filterRole === 'all' || user.role === filterRole;
+    
+    return matchesSearch && matchesRole;
+  });
+
   return (
-    <div>
+    <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-indigo-700">User Management</h1>
         <div className="flex gap-4">
@@ -124,25 +152,25 @@ const AdminUsersPage = () => {
               </tr>
             </thead>
             <tbody>
-              {users.map(user => (
-                <tr key={user.id} className="border-b hover:bg-gray-50">
-                  <td className="px-4 py-2">{user.username}</td>
-                  <td className="px-4 py-2">{user.email}</td>
+              {filteredUsers.map(user => (
+                <tr key={user?.id || Math.random()} className="border-b hover:bg-gray-50">
+                  <td className="px-4 py-2">{user?.username || 'N/A'}</td>
+                  <td className="px-4 py-2">{user?.email || 'N/A'}</td>
                   <td className="px-4 py-2">
                     <span className={`px-2 py-1 rounded-full text-sm ${
-                      user.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                      user?.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
                     }`}>
-                      {user.role}
+                      {user?.role || 'USER'}
                     </span>
                   </td>
                   <td className="px-4 py-2">
                     <span className={`px-2 py-1 rounded-full text-sm ${
-                      user.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      user?.userStatus === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                     }`}>
-                      {user.status}
+                      {user?.userStatus || 'INACTIVE'}
                     </span>
                   </td>
-                  <td className="px-4 py-2">{formatDate(user.createdAt)}</td>
+                  <td className="px-4 py-2">{formatDate(user?.createdAt)}</td>
                   <td className="px-4 py-2 space-x-2">
                     <button
                       onClick={() => handleViewUser(user)}
@@ -151,19 +179,15 @@ const AdminUsersPage = () => {
                       View
                     </button>
                     <button
-                      onClick={() => handleToggleUserStatus(user.id, user.status)}
-                      className={`px-3 py-1 rounded ${
-                        user.status === 'ACTIVE'
-                          ? 'bg-red-500 text-white hover:bg-red-600'
-                          : 'bg-green-500 text-white hover:bg-green-600'
-                      }`}
+                      onClick={() => handleDeleteUser(user?.id)}
+                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
                     >
-                      {user.status === 'ACTIVE' ? 'Suspend' : 'Activate'}
+                      Delete
                     </button>
                   </td>
                 </tr>
               ))}
-              {users.length === 0 && (
+              {filteredUsers.length === 0 && (
                 <tr>
                   <td colSpan="6" className="text-center py-8 text-gray-500">
                     No users found
@@ -191,11 +215,11 @@ const AdminUsersPage = () => {
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <h3 className="font-semibold text-gray-700 mb-2">User Information</h3>
-                <p><span className="font-medium">Username:</span> {selectedUser.username}</p>
-                <p><span className="font-medium">Email:</span> {selectedUser.email}</p>
-                <p><span className="font-medium">Role:</span> {selectedUser.role}</p>
-                <p><span className="font-medium">Status:</span> {selectedUser.status}</p>
-                <p><span className="font-medium">Joined:</span> {formatDate(selectedUser.createdAt)}</p>
+                <p><span className="font-medium">Username:</span> {selectedUser?.username || 'N/A'}</p>
+                <p><span className="font-medium">Email:</span> {selectedUser?.email || 'N/A'}</p>
+                <p><span className="font-medium">Role:</span> {selectedUser?.role || 'USER'}</p>
+                <p><span className="font-medium">Status:</span> {selectedUser?.userStatus || 'INACTIVE'}</p>
+                <p><span className="font-medium">Joined:</span> {formatDate(selectedUser?.createdAt)}</p>
               </div>
               <div>
                 <h3 className="font-semibold text-gray-700 mb-2">Activity Statistics</h3>

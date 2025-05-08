@@ -46,10 +46,8 @@ public class UserService {
         
         // Hash the password before saving
         user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
+        user.setUserStatus(User.UserStatus.ACTIVE); // Always set to ACTIVE
         user.setRegistrationDate(LocalDateTime.now());
-        user.setUserStatus(User.UserStatus.ACTIVE);
-        // Always set role to USER for public registration
-        user.setRole(User.UserRole.USER);
         
         return userRepository.save(user);
     }

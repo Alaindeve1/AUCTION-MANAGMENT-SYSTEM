@@ -6,13 +6,14 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.security.Keys;
 import java.util.Date;
 import javax.crypto.SecretKey;
+import java.util.Base64;
 
 public class JwtUtil {
-    private static final String SECRET_KEY = "your-very-secret-key-your-very-secret-key"; // should be at least 256 bits for HS256
+    private static final String SECRET_KEY = "bXktc3VwZXItc2VjcmV0LWtleS1mb3ItanVzdC1hdWN0aW9uLXN5c3RlbQ=="; // Base64-encoded string
     private static final long EXPIRATION_TIME = 86400000; // 1 day in ms
 
     private static SecretKey getKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+        return Keys.hmacShaKeyFor(Base64.getDecoder().decode(SECRET_KEY));
     }
 
     public static String generateToken(String username, String role) {

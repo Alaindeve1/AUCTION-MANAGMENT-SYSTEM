@@ -10,6 +10,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import jakarta.validation.Valid;
 import java.time.LocalDateTime;
@@ -72,13 +73,14 @@ public class ItemController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ItemDto> createItem(@RequestBody Map<String, Object> request) {
+        // TODO: Restrict to admin only (add proper security check here)
         String title = (String) request.get("title");
         String description = (String) request.getOrDefault("description", "");
         String imageUrl = (String) request.getOrDefault("imageUrl", "");
         Double startingPrice = Double.valueOf(request.get("startingPrice").toString());
         String itemStatusStr = (String) request.getOrDefault("itemStatus", "DRAFT");
-        Long sellerId = Long.valueOf(request.get("sellerId").toString());
         Long categoryId = request.get("categoryId") != null ? Long.valueOf(request.get("categoryId").toString()) : null;
 
         Item item = new Item();
@@ -88,19 +90,22 @@ public class ItemController {
         item.setStartingPrice(java.math.BigDecimal.valueOf(startingPrice));
         item.setItemStatus(Item.ItemStatus.valueOf(itemStatusStr));
 
-        Item createdItem = itemService.createItem(item, sellerId, categoryId);
+        Item createdItem = itemService.createItem(item, categoryId);
         return new ResponseEntity<>(ItemDto.fromEntity(createdItem), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ItemDto> updateItem(
             @PathVariable("id") Long itemId,
             @Valid @RequestBody Item itemDetails) {
+        // TODO: Restrict to admin only (add proper security check here)
         Item updatedItem = itemService.updateItem(itemId, itemDetails);
         return ResponseEntity.ok(ItemDto.fromEntity(updatedItem));
     }
 
     @PostMapping("/{id}/publish")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ItemDto> publishItem(
             @PathVariable("id") Long itemId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
@@ -110,15 +115,19 @@ public class ItemController {
     }
 
     @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ItemDto> updateItemStatus(
             @PathVariable("id") Long itemId,
             @RequestBody Item.ItemStatus status) {
+        // TODO: Restrict to admin only (add proper security check here)
         Item updatedItem = itemService.updateItemStatus(itemId, status);
         return ResponseEntity.ok(ItemDto.fromEntity(updatedItem));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteItem(@PathVariable("id") Long itemId) {
+        // TODO: Restrict to admin only (add proper security check here)
         itemService.deleteItem(itemId);
         return ResponseEntity.noContent().build();
     }
