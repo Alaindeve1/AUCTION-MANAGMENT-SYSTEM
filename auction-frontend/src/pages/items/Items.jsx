@@ -10,8 +10,16 @@ import {
   Typography,
   IconButton,
   MenuItem,
+  Tabs,
+  Tab,
+  Grid,
+  Card,
+  CardContent,
+  CardMedia,
+  CardActions,
+  Chip
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Gavel as GavelIcon } from '@mui/icons-material';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import DataTable from '../../components/common/DataTable';
@@ -36,6 +44,7 @@ const Items = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusTab, setStatusTab] = useState('ACTIVE'); // ACTIVE, PENDING, COMPLETED
 
   const formik = useFormik({
     initialValues: {
@@ -71,8 +80,10 @@ const Items = () => {
           search: searchTerm,
         },
       });
-      setItems(response.data.content);
-      setTotalCount(response.data.totalElements);
+      // Filter on frontend
+      const filtered = (response.data.content || []).filter(item => item.itemStatus !== 'DRAFT' && item.itemStatus === statusTab);
+      setItems(filtered);
+      setTotalCount(filtered.length);
     } catch (error) {
       toast.error('Failed to fetch items');
     }
@@ -90,7 +101,7 @@ const Items = () => {
   useEffect(() => {
     fetchItems();
     fetchCategories();
-  }, [page, rowsPerPage, searchTerm]);
+  }, [page, rowsPerPage, searchTerm, statusTab]);
 
   const handleOpen = (item = null) => {
     setSelectedItem(item);
@@ -165,31 +176,90 @@ const Items = () => {
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-        <Typography variant="h4">Items</Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpen()}
-        >
-          Add Item
-        </Button>
+        <Typography variant="h4" fontWeight={700} color="primary.main">Auction Items</Typography>
       </Box>
-
-      <DataTable
-        columns={columns}
-        data={items}
-        page={page}
-        rowsPerPage={rowsPerPage}
-        totalCount={totalCount}
-        onPageChange={(_, newPage) => setPage(newPage)}
-        onRowsPerPageChange={(event) => {
-          setRowsPerPage(parseInt(event.target.value, 10));
+      <Tabs
+        value={statusTab}
+        onChange={(e, v) => {
+          setStatusTab(v);
           setPage(0);
         }}
-        onSearch={setSearchTerm}
-        searchPlaceholder="Search items..."
-      />
-
+        indicatorColor="primary"
+        textColor="primary"
+        sx={{ mb: 3 }}
+      >
+        <Tab label="Active" value="ACTIVE" />
+        <Tab label="Pending" value="PENDING" />
+        <Tab label="Completed" value="COMPLETED" />
+      </Tabs>
+      <Grid container spacing={3}>
+        {items.length === 0 && (
+          <Grid item xs={12}>
+            <Box textAlign="center" py={8}>
+              <Typography color="text.secondary">No items found in this category.</Typography>
+            </Box>
+          </Grid>
+        )}
+        {items.map((item) => (
+          <Grid item xs={12} sm={6} md={4} lg={3} key={item.id}>
+            <Card sx={{ display: 'flex', flexDirection: 'column', height: '100%', borderRadius: 3, boxShadow: 3 }}>
+              {item.imageUrl && (
+                <CardMedia
+                  component="img"
+                  height="180"
+                  image={item.imageUrl}
+                  alt={item.title}
+                  sx={{ objectFit: 'cover', borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
+                />
+              )}
+              <CardContent sx={{ flexGrow: 1 }}>
+                <Typography variant="h6" fontWeight={600} gutterBottom>{item.title}</Typography>
+                <Typography variant="body2" color="text.secondary" mb={1}>{item.description}</Typography>
+                <Box display="flex" alignItems="center" gap={1} mb={1}>
+                  <Chip label={item.itemStatus} color={
+                    item.itemStatus === 'ACTIVE' ? 'success' :
+                    item.itemStatus === 'PENDING' ? 'warning' :
+                    item.itemStatus === 'COMPLETED' ? 'info' : 'default'
+                  } size="small" />
+                  <Typography variant="body2" color="text.secondary">Starting at <b>${item.startingPrice}</b></Typography>
+                </Box>
+                <Typography variant="caption" color="text.secondary">
+                  Category: {categories.find(c => c.id === item.categoryId)?.name || 'N/A'}
+                </Typography>
+              </CardContent>
+              <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  startIcon={<GavelIcon />}
+                  href={`/items/${item.id}`}
+                  sx={{ borderRadius: 2 }}
+                >
+                  {item.itemStatus === 'ACTIVE' ? 'Bid Now' : 'View'}
+                </Button>
+              </CardActions>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+      <Box mt={4} display="flex" justifyContent="center">
+        <DataTable
+          columns={[]}
+          data={[]}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          totalCount={totalCount}
+          onPageChange={(_, newPage) => setPage(newPage)}
+          onRowsPerPageChange={(event) => {
+            setRowsPerPage(parseInt(event.target.value, 10));
+            setPage(0);
+          }}
+          onSearch={setSearchTerm}
+          searchPlaceholder="Search items..."
+          hideTable
+        />
+      </Box>
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle>
           {selectedItem ? 'Edit Item' : 'Add New Item'}
@@ -240,8 +310,8 @@ const Items = () => {
               error={formik.touched.categoryId && Boolean(formik.errors.categoryId)}
               helperText={formik.touched.categoryId && formik.errors.categoryId}
             >
-              {categories.map((category) => (
-                <MenuItem key={category.id} value={category.id}>
+              {categories.map((category, idx) => (
+                <MenuItem key={category.id || idx} value={category.id}>
                   {category.name}
                 </MenuItem>
               ))}
@@ -259,4 +329,4 @@ const Items = () => {
   );
 };
 
-export default Items; 
+export default Items;

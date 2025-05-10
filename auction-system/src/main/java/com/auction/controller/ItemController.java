@@ -2,6 +2,7 @@ package com.auction.controller;
 
 import com.auction.dto.BidDto;
 import com.auction.dto.ItemDto;
+import com.auction.dto.SellingItemDto;
 import com.auction.model.Bid;
 import com.auction.model.Item;
 import com.auction.service.BidService;
@@ -122,6 +123,21 @@ public class ItemController {
         // TODO: Restrict to admin only (add proper security check here)
         Item updatedItem = itemService.updateItemStatus(itemId, status);
         return ResponseEntity.ok(ItemDto.fromEntity(updatedItem));
+    }
+
+    @GetMapping("/owner/{userId}")
+    public ResponseEntity<List<SellingItemDto>> getItemsByOwner(@PathVariable("userId") Long userId) {
+        List<Item> items = itemService.getItemsBySeller(userId);
+        List<SellingItemDto> dtos = items.stream()
+            .map(item -> new SellingItemDto(
+                item.getItemId(),
+                item.getTitle(),
+                item.getImageUrl(),
+                item.getStartingPrice(),
+                item.getItemStatus() != null ? item.getItemStatus().name() : null
+            ))
+            .toList();
+        return ResponseEntity.ok(dtos);
     }
 
     @DeleteMapping("/{id}")

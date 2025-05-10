@@ -19,4 +19,5 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     List<Item> findExpiredAuctions(LocalDateTime now);
     
     List<Item> findByTitleContainingIgnoreCase(String keyword);
+    long countByItemStatus(ItemStatus status);
 }

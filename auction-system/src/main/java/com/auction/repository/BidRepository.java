@@ -23,4 +23,10 @@ public interface BidRepository extends JpaRepository<Bid, Long> {
     
     @Query("SELECT COUNT(b) FROM Bid b WHERE b.item.itemId = :itemId")
     long countBidsByItemId(Long itemId);
+
+    @Query("SELECT COALESCE(SUM(b.bidAmount), 0) FROM Bid b")
+    BigDecimal getTotalBidValue();
+
+    @Query("SELECT COUNT(DISTINCT b.bidder.userId) FROM Bid b")
+    long countUniqueBidders();
 }

@@ -65,6 +65,10 @@ public class User implements UserDetails {
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
 
+    // Alias for compatibility with code expecting getId()
+    public Long getId() { return userId; }
+    public void setId(Long id) { this.userId = id; }
+
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
 

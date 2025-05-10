@@ -31,6 +31,15 @@ public class BidService {
         this.userRepository = userRepository;
     }
 
+    // Bid stats aggregation
+    public com.auction.dto.BidStatsDto getBidStats() {
+        long totalBids = bidRepository.count();
+        java.math.BigDecimal totalValue = bidRepository.getTotalBidValue();
+        long uniqueBidders = bidRepository.countUniqueBidders();
+        long activeAuctions = itemRepository.countByItemStatus(com.auction.model.Item.ItemStatus.ACTIVE);
+        return new com.auction.dto.BidStatsDto(totalBids, totalValue, activeAuctions, uniqueBidders);
+    }
+
     public List<Bid> getAllBids() {
         return bidRepository.findAll();
     }

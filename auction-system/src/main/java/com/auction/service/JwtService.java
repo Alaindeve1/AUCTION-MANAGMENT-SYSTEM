@@ -40,8 +40,11 @@ public class JwtService {
         return (username.equals(userDetails.getUsername()));
     }
 
-    public String generateToken(String username, String role) {
+    public String generateToken(Long id, String username, String email, String role) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("id", id);
+        claims.put("username", username);
+        claims.put("email", email);
         claims.put("role", role);
         return createToken(claims, username);
     }

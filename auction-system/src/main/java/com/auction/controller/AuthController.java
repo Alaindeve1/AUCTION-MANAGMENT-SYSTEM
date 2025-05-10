@@ -26,7 +26,7 @@ public class AuthController {
         if (!passwordEncoder.matches(request.get("password"), user.getPasswordHash())) {
             throw new RuntimeException("Invalid credentials");
         }
-        String jwt = JwtUtil.generateToken(user.getUsername(), user.getRole().name());
+        String jwt = JwtUtil.generateToken(user.getId(), user.getUsername(), user.getEmail(), user.getRole().name());
         Map<String, Object> response = new HashMap<>();
         response.put("token", jwt);
         response.put("username", user.getUsername());

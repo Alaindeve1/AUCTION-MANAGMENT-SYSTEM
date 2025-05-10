@@ -22,6 +22,11 @@ public class BidController {
         this.bidService = bidService;
     }
 
+    @GetMapping("/stats")
+    public ResponseEntity<com.auction.dto.BidStatsDto> getBidStats() {
+        return ResponseEntity.ok(bidService.getBidStats());
+    }
+
     @GetMapping
     public ResponseEntity<List<BidDto>> getAllBids() {
         List<Bid> bids = bidService.getAllBids();

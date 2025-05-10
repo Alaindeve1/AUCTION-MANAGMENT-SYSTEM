@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
 import { useAdminAuth } from './AdminAuthContext';
+import { useQuery } from '@tanstack/react-query';
+import api from '../utils/api';
 import { format } from 'date-fns';
 import {
   ChartBarIcon,
@@ -14,15 +15,6 @@ import {
 
 const AdminBidsPage = () => {
   const { admin } = useAdminAuth();
-  const [bids, setBids] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [stats, setStats] = useState({
-    totalBids: 0,
-    totalValue: 0,
-    activeAuctions: 0,
-    uniqueBidders: 0
-  });
   const [filters, setFilters] = useState({
     search: '',
     dateRange: 'all',
@@ -33,29 +25,40 @@ const AdminBidsPage = () => {
   const [selectedBid, setSelectedBid] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
 
-  // Fetch bids and stats
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const [bidsRes, statsRes] = await Promise.all([
-          axios.get('/api/bids', { 
-            headers: { Authorization: `Bearer ${admin?.token}` } 
-          }),
-          axios.get('/api/bids/stats', { 
-            headers: { Authorization: `Bearer ${admin?.token}` } 
-          })
-        ]);
-        setBids(bidsRes.data);
-        setStats(statsRes.data);
-      } catch (err) {
-        setError('Failed to load bids data.');
-      }
-      setLoading(false);
-    };
-    if (admin?.token) fetchData();
-  }, [admin]);
+  // React Query: fetch bids
+  const {
+    data: bids = [],
+    isLoading: bidsLoading,
+    isError: bidsError,
+    refetch: refetchBids
+  } = useQuery({
+    queryKey: ['bids', admin?.token],
+    queryFn: async () => {
+      if (!admin?.token) return [];
+      const res = await api.get('/bids');
+      return res.data;
+    },
+    enabled: !!admin?.token
+  });
+
+  // React Query: fetch stats
+  const {
+    data: stats = { totalBids: 0, totalValue: 0, activeAuctions: 0, uniqueBidders: 0 },
+    isLoading: statsLoading,
+    isError: statsError,
+    refetch: refetchStats
+  } = useQuery({
+    queryKey: ['bidsStats', admin?.token],
+    queryFn: async () => {
+      if (!admin?.token) return { totalBids: 0, totalValue: 0, activeAuctions: 0, uniqueBidders: 0 };
+      const res = await api.get('/bids/stats');
+      return res.data;
+    },
+    enabled: !!admin?.token
+  });
+
+  const loading = bidsLoading || statsLoading;
+  const error = bidsError || statsError ? 'Failed to load bids data.' : null;
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -68,8 +71,10 @@ const AdminBidsPage = () => {
   };
 
   const handleRefresh = () => {
-    // Implement refresh logic here
+    refetchBids();
+    refetchStats();
   };
+
 
   const filteredBids = bids.filter(bid => {
     const matchesSearch = bid.itemTitle.toLowerCase().includes(filters.search.toLowerCase()) ||

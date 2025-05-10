@@ -110,7 +110,10 @@ public class AuctionResultService {
         AuctionResultDTO dto = new AuctionResultDTO();
         dto.setResultId(auctionResult.getResultId());
         dto.setItemId(auctionResult.getItem().getItemId());
+        dto.setItemTitle(auctionResult.getItem().getTitle());
+        dto.setEndDate(auctionResult.getItem().getEndDate());
         dto.setWinnerId(auctionResult.getWinner() != null ? auctionResult.getWinner().getUserId() : null);
+        dto.setWinnerName(auctionResult.getWinner() != null ? auctionResult.getWinner().getUsername() : null);
         dto.setFinalPrice(auctionResult.getFinalPrice());
         dto.setResultStatus(auctionResult.getResultStatus());
         return dto;

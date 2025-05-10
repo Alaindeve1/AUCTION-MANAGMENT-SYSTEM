@@ -21,6 +21,8 @@ import AdminResultsPage from './admin/AdminResultsPage';
 import AdminBidsPage from './admin/AdminBidsPage';
 import AdminUsersPage from './admin/AdminUsersPage';
 import AdminItemsPage from './admin/AdminItemsPage';
+import Dashboard from './pages/Dashboard.jsx';
+import Items from './pages/items/Items';
 
 // Test component
 const TestComponent = () => {
@@ -46,9 +48,9 @@ const router = createBrowserRouter(
       
       {/* Protected User Routes */}
       <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
-        <Route path="/dashboard" element={<div>Dashboard Content</div>} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<div>Profile Content</div>} />
-        <Route path="/items" element={<div>Items Content</div>} />
+        <Route path="/items" element={<Items />} />
         <Route path="/categories" element={<div>Categories Content</div>} />
         <Route path="/bids" element={<div>Bids Content</div>} />
         <Route path="/auction-results" element={<div>Auction Results Content</div>} />
