@@ -23,7 +23,12 @@ import AdminUsersPage from './admin/AdminUsersPage';
 import AdminItemsPage from './admin/AdminItemsPage';
 import Dashboard from './pages/Dashboard.jsx';
 import Items from './pages/items/Items';
+import Bids from './pages/Bids';
+import Watchlist from './pages/Watchlist';
+import Wins from './pages/Wins';
+import Notification from './pages/Notification';
 
+import Profile from './pages/Profile';
 // Test component
 const TestComponent = () => {
   return (
@@ -49,11 +54,12 @@ const router = createBrowserRouter(
       {/* Protected User Routes */}
       <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/profile" element={<div>Profile Content</div>} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/items" element={<Items />} />
-        <Route path="/categories" element={<div>Categories Content</div>} />
-        <Route path="/bids" element={<div>Bids Content</div>} />
-        <Route path="/auction-results" element={<div>Auction Results Content</div>} />
+        <Route path="/bids" element={<Bids />} />
+        <Route path="/watchlist" element={<Watchlist />} />
+        <Route path="/wins" element={<Wins />} />
+        <Route path="/notifications" element={<Notification />} />
         <Route path="/settings" element={<div>Settings Content</div>} />
         <Route path="/help" element={<div>Help Content</div>} />
       </Route>

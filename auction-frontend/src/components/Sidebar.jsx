@@ -14,10 +14,10 @@ import {
 const navigation = [
   { name: 'Dashboard', to: '/dashboard', icon: FiHome },
   { name: 'Items', to: '/items', icon: FiPackage },
-  { name: 'Categories', to: '/categories', icon: FiGrid },
-  { name: 'Users', to: '/users', icon: FiUsers },
-  { name: 'Auction Results', to: '/auction-results', icon: FiAward },
   { name: 'Bids', to: '/bids', icon: FiDollarSign },
+  { name: 'Watchlist', to: '/watchlist', icon: FiGrid },
+  { name: 'Wins', to: '/wins', icon: FiAward },
+  { name: 'Notifications', to: '/notifications', icon: FiUsers },
   { name: 'Profile', to: '/profile', icon: FiUser },
 ];
 
