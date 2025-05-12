@@ -17,6 +17,7 @@ import api from '../utils/api';
 const Notification = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchNotifications();
@@ -25,15 +26,25 @@ const Notification = () => {
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-      // Replace with actual logged-in user ID
       const userId = localStorage.getItem('userId') || 1;
-      const res = await api.get(`/notifications/user/${userId}`);
-      setNotifications(res.data || []);
+      // Fetch general notifications (ALL + SIGNED_IN)
+      const generalRes = await api.get('/notifications/general');
+      // Fetch user-specific notifications
+      const userRes = await api.get(`/notifications/user/${userId}`);
+      setNotifications([...(generalRes.data || []), ...(userRes.data || [])]);
+      setError(null);
     } catch (err) {
+      if (err.response && err.response.status === 401) {
+        setError('Please log in to view your notifications.');
+      } else {
+        setError('Failed to load notifications.');
+      }
       setNotifications([]);
     }
     setLoading(false);
   };
+
+
 
   return (
     <Box p={3}>
@@ -50,6 +61,13 @@ const Notification = () => {
       {loading ? (
         <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
           <CircularProgress />
+        </Box>
+      ) : error ? (
+        <Box display="flex" flexDirection="column" alignItems="center" mt={6}>
+          <NotificationsActiveIcon sx={{ fontSize: 90, color: 'deepskyblue', mb: 2, animation: 'pulse 1.5s infinite alternate' }} />
+          <Typography variant="h6" color="error" mt={2}>
+            {error}
+          </Typography>
         </Box>
       ) : notifications.length === 0 ? (
         <Box display="flex" flexDirection="column" alignItems="center" mt={6}>
@@ -70,6 +88,9 @@ const Notification = () => {
                   <CardContent>
                     <Box display="flex" alignItems="center" gap={1} mb={1}>
                       <NotificationsActiveIcon color={notif.read ? 'disabled' : 'primary'} />
+                      <Typography variant="subtitle2" fontWeight={notif.read ? 400 : 700} color="primary.main">
+                        {notif.title ? notif.title : 'Notification'}
+                      </Typography>
                       <Typography variant="body1" fontWeight={notif.read ? 400 : 700}>
                         {notif.message}
                       </Typography>

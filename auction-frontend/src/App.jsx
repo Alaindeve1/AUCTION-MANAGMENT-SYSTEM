@@ -16,6 +16,7 @@ import AdminLoginPage from './admin/AdminLoginPage';
 import AdminProtectedRoute from './admin/AdminProtectedRoute';
 import AdminLayout from './admin/AdminLayout';
 import AdminDashboard from './admin/AdminDashboard';
+import AdminRoutes from './admin/AdminRoutes';
 import AdminCategoriesPage from './admin/AdminCategoriesPage';
 import AdminResultsPage from './admin/AdminResultsPage';
 import AdminBidsPage from './admin/AdminBidsPage';
@@ -66,14 +67,8 @@ const router = createBrowserRouter(
 
       {/* Admin Routes */}
       <Route path="/admin/login" element={<AdminLoginPage />} />
-      <Route path="/admin" element={<AdminProtectedRoute><AdminLayout /></AdminProtectedRoute>}>
-        <Route index element={<AdminDashboard />} />
-        <Route path="dashboard" element={<AdminDashboard />} />
-        <Route path="users" element={<AdminUsersPage />} />
-        <Route path="items" element={<AdminItemsPage />} />
-        <Route path="categories" element={<AdminCategoriesPage />} />
-        <Route path="bids" element={<AdminBidsPage />} />
-        <Route path="results" element={<AdminResultsPage />} />
+      <Route path="/admin/*" element={<AdminProtectedRoute><AdminLayout /></AdminProtectedRoute>}>
+        <Route path="*" element={<AdminRoutes />} />
       </Route>
     </Route>
   ),

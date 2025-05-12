@@ -14,4 +14,18 @@ public class NotificationService {
     public List<Notification> getNotificationsByUser(Long userId) {
         return notificationRepository.findByUserUserId(userId);
     }
+
+    public void createNotification(com.auction.dto.NotificationDto dto) {
+        Notification notification = new Notification();
+        notification.setTitle(dto.getTitle());
+        notification.setMessage(dto.getMessage());
+        notification.setTarget(dto.getTarget());
+        notification.setRead(false);
+        notification.setCreatedAt(java.time.LocalDateTime.now());
+        notificationRepository.save(notification);
+    }
+
+    public List<Notification> getNotificationsByTarget(String target) {
+        return notificationRepository.findByTarget(target);
+    }
 }

@@ -7,6 +7,8 @@ const statusOptions = ['DRAFT', 'ACTIVE', 'ENDED', 'SOLD'];
 const AdminItemsPage = () => {
   const { admin } = useAdminAuth();
   const [items, setItems] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -19,8 +21,8 @@ const AdminItemsPage = () => {
     itemStatus: 'DRAFT',
     description: '',
     imageUrl: '',
-    startDate: new Date().toISOString().slice(0, 16),
-    endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16)
+    startDate: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
+    endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)
   });
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState(null);
@@ -70,8 +72,8 @@ const AdminItemsPage = () => {
       itemStatus: item.itemStatus || 'DRAFT',
       description: item.description || '',
       imageUrl: item.imageUrl || '',
-      startDate: item.startDate ? item.startDate.split('T')[0] : new Date().toISOString().split('T')[0],
-      endDate: item.endDate ? item.endDate.split('T')[0] : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      startDate: item.startDate ? item.startDate.slice(0, 16) : new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
+      endDate: item.endDate ? item.endDate.slice(0, 16) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)
     });
     setShowModal(true);
     setFormError(null);
@@ -171,13 +173,17 @@ const AdminItemsPage = () => {
     setFormLoading(false);
   };
 
+  // Pagination logic
+  const totalPages = Math.ceil(items.length / itemsPerPage);
+  const paginatedItems = items.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-indigo-700">Manage Items</h1>
         <button
           onClick={handleAdd}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-semibold"
+          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-semibold animate__animated animate__fadeInRight"
         >
           Add Item
         </button>
@@ -187,72 +193,89 @@ const AdminItemsPage = () => {
       ) : error ? (
         <div className="text-center py-8 text-red-600">{error}</div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {items.map((item) => (
-                <tr key={item.itemId}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {item.imageUrl ? (
-                      <img 
-                        src={item.imageUrl} 
-                        alt={item.title} 
-                        className="h-16 w-16 object-cover rounded"
-                      />
-                    ) : (
-                      <div className="h-16 w-16 bg-gray-200 rounded flex items-center justify-center">
-                        <span className="text-gray-400">No image</span>
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{item.title}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{item.category?.categoryName || 'N/A'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      item.itemStatus === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-                      item.itemStatus === 'SOLD' ? 'bg-blue-100 text-blue-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {item.itemStatus}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">${item.startingPrice}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={() => handleEdit(item)}
-                      className="text-indigo-600 hover:text-indigo-900 mr-4"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.itemId)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <>
+        {/* Cards layout with animation */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-8 animate__animated animate__fadeInUp">
+          {paginatedItems.map(item => (
+            <div key={item.itemId} className="bg-white rounded-2xl shadow-xl p-5 flex flex-col justify-between hover:shadow-2xl transition-all duration-300 animate__animated animate__zoomIn">
+              <div>
+                <div className="relative h-40 mb-4">
+                  {item.imageUrl ? (
+                    <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover rounded-xl" />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200 rounded-xl flex items-center justify-center">
+                      <span className="text-gray-400">No image</span>
+                    </div>
+                  )}
+                  <span className={`absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-bold shadow ${
+                    item.itemStatus === 'ACTIVE' ? 'bg-green-100 text-green-700' :
+                    item.itemStatus === 'SOLD' ? 'bg-blue-100 text-blue-700' :
+                    item.itemStatus === 'ENDED' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-gray-100 text-gray-700'
+                  } animate__animated animate__fadeIn`}>{item.itemStatus}</span>
+                </div>
+                <h3 className="text-lg font-bold mb-2 text-indigo-700 truncate">{item.title}</h3>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="bg-indigo-50 text-indigo-600 px-2 py-1 rounded text-xs font-semibold">{item.category?.categoryName || 'N/A'}</span>
+                </div>
+                <p className="text-gray-600 mb-2 line-clamp-2">{item.description}</p>
+                <div className="font-bold text-xl text-indigo-600 mb-2">${item.startingPrice}</div>
+                <div className="text-xs text-gray-400 mb-1">Start: {item.startDate ? new Date(item.startDate).toLocaleString() : '-'}</div>
+                <div className="text-xs text-gray-400">End: {item.endDate ? new Date(item.endDate).toLocaleString() : '-'}</div>
+              </div>
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={() => handleEdit(item)}
+                  className="flex-1 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 transition animate__animated animate__fadeInLeft"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(item.itemId)}
+                  className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-700 transition animate__animated animate__fadeInRight"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
+        {/* Pagination controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-center gap-2 mb-8 animate__animated animate__fadeInUp animate__delay-1s">
+            <button
+              className="px-3 py-1 rounded bg-gray-200 text-gray-700 hover:bg-indigo-100 disabled:opacity-60"
+              onClick={() => setCurrentPage(page => Math.max(page - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              Prev
+            </button>
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i}
+                className={`px-3 py-1 rounded ${currentPage === i + 1 ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-indigo-100'}`}
+                onClick={() => setCurrentPage(i + 1)}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              className="px-3 py-1 rounded bg-gray-200 text-gray-700 hover:bg-indigo-100 disabled:opacity-60"
+              onClick={() => setCurrentPage(page => Math.min(page + 1, totalPages))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </button>
+          </div>
+        )}
+        </>
       )}
       {/* Modal for Add/Edit Item */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4 overflow-y-auto">
           <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md my-8">
             <h2 className="text-xl font-bold mb-4 text-indigo-700">{editItem ? 'Edit Item' : 'Add Item'}</h2>
-            <form onSubmit={handleSave} className="space-y-4">
+            <form onSubmit={handleSave} className="space-y-4 animate__animated animate__fadeInDown">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
                 <input

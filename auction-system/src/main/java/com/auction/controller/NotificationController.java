@@ -19,11 +19,46 @@ public class NotificationController {
         List<NotificationDto> dtos = notificationService.getNotificationsByUser(userId).stream()
             .map(n -> new NotificationDto(
                 n.getId(),
+                n.getTitle(),
                 n.getMessage(),
+                n.getTarget(),
                 n.isRead(),
                 n.getCreatedAt()
             ))
             .toList();
         return ResponseEntity.ok(dtos);
+    }
+
+    // Endpoint to get general notifications (ALL and SIGNED_IN)
+    @GetMapping("/general")
+    public ResponseEntity<List<NotificationDto>> getGeneralNotifications() {
+        List<NotificationDto> dtos = notificationService.getNotificationsByTarget("ALL").stream()
+            .map(n -> new NotificationDto(
+                n.getId(),
+                n.getTitle(),
+                n.getMessage(),
+                n.getTarget(),
+                n.isRead(),
+                n.getCreatedAt()
+            ))
+            .toList();
+        dtos.addAll(notificationService.getNotificationsByTarget("SIGNED_IN").stream()
+            .map(n -> new NotificationDto(
+                n.getId(),
+                n.getTitle(),
+                n.getMessage(),
+                n.getTarget(),
+                n.isRead(),
+                n.getCreatedAt()
+            ))
+            .toList());
+        return ResponseEntity.ok(dtos);
+    }
+
+    // Only admins can create notifications
+    @PostMapping
+    public ResponseEntity<?> createNotification(@RequestBody NotificationDto dto) {
+        notificationService.createNotification(dto);
+        return ResponseEntity.ok().build();
     }
 }

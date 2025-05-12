@@ -109,7 +109,7 @@ const AdminDashboard = () => {
           <ul className="space-y-2">
             {aiInsights.length === 0 && <li className="text-gray-500">No insights at this time.</li>}
             {aiInsights.map((insight, idx) => (
-              <li key={idx} className="bg-white rounded px-3 py-2 shadow-sm text-gray-700">{insight}</li>
+              <li key={insight.id || insight.key || insight.title || idx} className="bg-white rounded px-3 py-2 shadow-sm text-gray-700">{insight}</li>
             ))}
           </ul>
         </div>

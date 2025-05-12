@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { FiAward, FiActivity, FiStar, FiBox, FiBell, FiUser, FiShoppingCart, FiPlus } from 'react-icons/fi';
 import api from '../utils/api';
 import { getUserData } from '../utils/auth.jsx';
@@ -13,60 +13,81 @@ const StatCard = ({ title, value, icon: Icon, color }) => (
   </div>
 );
 
+import { Navigate, useLocation } from 'react-router-dom';
+
 const Dashboard = () => {
   // User info
   const user = getUserData(); // { id, username, ... }
+  const location = useLocation();
+  if (!user) {
+    // Not authenticated, redirect to login
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
 // console.log('User in Dashboard:', user);
-  const [bids, setBids] = useState([]);
-  const [wins, setWins] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Bids
+  const { data: bids = [], isLoading: bidsLoading, error: bidsError } = useQuery({
+    queryKey: ['bids', user?.id],
+    queryFn: async () => {
+      const res = await api.get(`/bids/user/${user.id}`);
+      return res.data;
+    },
+    enabled: !!user?.id,
+    refetchInterval: 5000,
+  });
+  // Wins
+  const { data: wins = [], isLoading: winsLoading, error: winsError } = useQuery({
+    queryKey: ['wins', user?.id],
+    queryFn: async () => {
+      const res = await api.get(`/auction-results/winner/${user.id}`);
+      return res.data;
+    },
+    enabled: !!user?.id,
+    refetchInterval: 5000,
+  });
+  // Favorites
+  const { data: favorites = [], isLoading: favLoading, error: favError } = useQuery({
+    queryKey: ['favorites', user?.id],
+    queryFn: async () => {
+      const res = await api.get(`/favorites/user/${user.id}`);
+      return res.data;
+    },
+    enabled: !!user?.id,
+    refetchInterval: 5000,
+  });
+  // Notifications
+  const { data: notifications = [], isLoading: notifLoading, error: notifError } = useQuery({
+    queryKey: ['notifications', user?.id],
+    queryFn: async () => {
+      const res = await api.get(`/notifications/user/${user.id}`);
+      return res.data;
+    },
+    enabled: !!user?.id,
+    refetchInterval: 5000,
+  });
 
-  // Placeholders for future features
-  const [sellingItems, setSellingItems] = useState([]); // Needs backend endpoint
-  const [favorites, setFavorites] = useState([]); // Needs backend endpoint
-  const [notifications, setNotifications] = useState([]); // Needs backend endpoint
-
-  useEffect(() => {
-    let intervalId;
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        // Fetch user bids
-        const bidsRes = await api.get(`/bids/user/${user.id}`);
-        setBids(bidsRes.data);
-        // Fetch user wins
-        const winsRes = await api.get(`/auction-results/winner/${user.id}`);
-        setWins(winsRes.data);
-        // Fetch favorites
-        const favRes = await api.get(`/favorites/user/${user.id}`);
-        setFavorites(favRes.data);
-        // Fetch notifications
-        const notifRes = await api.get(`/notifications/user/${user.id}`);
-        setNotifications(notifRes.data);
-        // Only admins see selling items
-        if (user?.role === 'ADMIN') {
-          const sellingRes = await api.get(`/items/owner/${user.id}`);
-          setSellingItems(sellingRes.data);
-        } else {
-          setSellingItems([]);
-        }
-      } catch (err) {
-        // Optionally, show error toast
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (user?.id) {
-      fetchData();
-      intervalId = setInterval(fetchData, 5000); // Poll every 5 seconds
-    }
-    return () => clearInterval(intervalId);
-  }, [user?.id, user?.role]);
+  const loading = bidsLoading || winsLoading || favLoading || notifLoading;
+  const error = bidsError || winsError || favError || notifError;
 
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      return (
+        <div className="flex flex-col items-center justify-center h-screen">
+          <div className="text-red-600 text-lg font-bold mb-4">Session expired or unauthorized. Please <a href="/login" className="underline">login again</a>.</div>
+        </div>
+      );
+    }
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <div className="text-red-600 text-lg font-bold mb-4">An error occurred loading your dashboard.</div>
+        <div className="text-gray-500">{error.message || JSON.stringify(error)}</div>
       </div>
     );
   }
@@ -81,9 +102,6 @@ const Dashboard = () => {
         </div>
         <div className="flex gap-2">
           <a href="/items" className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition"><FiShoppingCart className="mr-2"/> Browse Auctions</a>
-          {user?.role === 'ADMIN' && (
-            <a href="/items/new" className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition"><FiPlus className="mr-2"/> Sell an Item</a>
-          )}
           <a href="/profile" className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg shadow hover:bg-gray-200 transition"><FiUser className="mr-2"/> My Profile</a>
         </div>
       </div>
@@ -92,9 +110,6 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard title="My Active Bids" value={bids.length} icon={FiActivity} color="text-blue-500" />
         <StatCard title="Auctions Won" value={wins.length} icon={FiAward} color="text-green-500" />
-        {user?.role === 'ADMIN' && (
-          <StatCard title="Selling Items" value={sellingItems.length || '--'} icon={FiBox} color="text-purple-500" />
-        )}
         <StatCard title="Favorites" value={favorites.length || '--'} icon={FiStar} color="text-yellow-500" />
       </div>
 
@@ -144,23 +159,7 @@ const Dashboard = () => {
         </ul>
       </div>
 
-      {/* Selling Items */}
-      <div className="bg-white rounded-xl shadow p-6 mb-8">
-        <div className="font-semibold text-lg text-gray-700 mb-4 flex items-center"><FiBox className="mr-2"/> Selling Items</div>
-        <ul className="divide-y divide-gray-100">
-          {sellingItems.length === 0 && <li className="text-gray-400">You have not listed any items for sale.</li>}
-          {sellingItems.slice(-5).reverse().map(item => (
-            <li key={item.itemId} className="py-2 flex items-center gap-3">
-              {item.imageUrl && <img src={item.imageUrl} alt={item.title} className="w-12 h-12 rounded object-cover border" />}
-              <div className="flex flex-col flex-1">
-                <span className="text-gray-900 font-medium">{item.title}</span>
-                <span className="text-xs text-gray-500">Price: ${item.startingPrice} &bull; Status: {item.itemStatus}</span>
-              </div>
-              <a href={`/items/${item.itemId}`} className="ml-auto text-indigo-600 hover:underline text-sm">View</a>
-            </li>
-          ))}
-        </ul>
-      </div>
+
 
       {/* Favorites */}
       <div className="bg-white rounded-xl shadow p-6 mb-8">

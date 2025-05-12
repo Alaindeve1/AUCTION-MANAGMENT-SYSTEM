@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import FavoriteButton from '../../components/FavoriteButton';
 import {
   Box,
   Button,
@@ -213,7 +214,16 @@ const Items = () => {
                 />
               )}
               <CardContent sx={{ flexGrow: 1 }}>
-                <Typography variant="h6" fontWeight={600} gutterBottom>{item.title}</Typography>
+                <Box display="flex" alignItems="center" justifyContent="space-between">
+                  <Typography variant="h6" fontWeight={600} gutterBottom>{item.title}</Typography>
+                  <FavoriteButton
+                    itemId={item.id}
+                    initialFavorite={!!item.isFavorite}
+                    onChange={favorited => {
+                      setItems(prev => prev.map(i => i.id === item.id ? { ...i, isFavorite: favorited } : i));
+                    }}
+                  />
+                </Box>
                 <Typography variant="body2" color="text.secondary" mb={1}>{item.description}</Typography>
                 <Box display="flex" alignItems="center" gap={1} mb={1}>
                   <Chip label={item.itemStatus} color={

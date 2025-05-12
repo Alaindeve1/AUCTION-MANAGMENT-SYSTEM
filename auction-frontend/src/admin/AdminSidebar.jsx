@@ -14,6 +14,7 @@ const AdminSidebar = () => {
     { name: 'Categories', path: '/admin/categories' },
     { name: 'Bids', path: '/admin/bids' },
     { name: 'Results', path: '/admin/results' },
+    { name: 'Notifications', path: '/admin/notifications' },
   ];
 
   const handleLogout = () => {

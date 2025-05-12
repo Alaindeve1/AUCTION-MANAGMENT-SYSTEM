@@ -62,8 +62,10 @@ public class ItemService {
                     .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + categoryId));
         }
         item.setCategory(category);
-        // Set initial status
-        item.setItemStatus(Item.ItemStatus.DRAFT);
+        // Set initial status only if not set
+        if (item.getItemStatus() == null) {
+            item.setItemStatus(Item.ItemStatus.DRAFT);
+        }
         // Do not set seller here
         return itemRepository.save(item);
     }
@@ -83,6 +85,7 @@ public class ItemService {
         }
         if (itemDetails.getStartDate() != null) item.setStartDate(itemDetails.getStartDate());
         if (itemDetails.getEndDate() != null) item.setEndDate(itemDetails.getEndDate());
+        if (itemDetails.getItemStatus() != null) item.setItemStatus(itemDetails.getItemStatus());
         return itemRepository.save(item);
     }
 

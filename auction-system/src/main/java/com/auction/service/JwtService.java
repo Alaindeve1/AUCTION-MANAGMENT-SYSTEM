@@ -11,6 +11,7 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.List;
 import io.jsonwebtoken.SignatureAlgorithm;
 
 @Service
@@ -46,6 +47,7 @@ public class JwtService {
         claims.put("username", username);
         claims.put("email", email);
         claims.put("role", role);
+        claims.put("roles", List.of(role));
         return createToken(claims, username);
     }
 
