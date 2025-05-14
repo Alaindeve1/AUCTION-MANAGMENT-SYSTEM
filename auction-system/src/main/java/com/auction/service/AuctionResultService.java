@@ -69,18 +69,18 @@ public class AuctionResultService {
         auctionResult.setItem(item);
 
         if (highestBid.isPresent()) {
+            // Auction has bids - set as pending with the highest bid amount
+            auctionResult.setResultStatus(AuctionResult.ResultStatus.PENDING);
             auctionResult.setWinner(highestBid.get().getBidder());
             auctionResult.setFinalPrice(highestBid.get().getBidAmount());
-            auctionResult.setResultStatus(AuctionResult.ResultStatus.PENDING);
 
-            // Update item status to SOLD and set seller to winner
+            // Update item status to SOLD
             item.setItemStatus(Item.ItemStatus.SOLD);
-            item.setSeller(highestBid.get().getBidder());
             itemRepository.save(item);
         } else {
-            // No bids were placed
-            auctionResult.setFinalPrice(BigDecimal.ZERO);
+            // No bids were placed - mark as cancelled with zero price
             auctionResult.setResultStatus(AuctionResult.ResultStatus.CANCELLED);
+            auctionResult.setFinalPrice(BigDecimal.ZERO);
 
             // Update item status to ENDED
             item.setItemStatus(Item.ItemStatus.ENDED);

@@ -26,43 +26,15 @@ const Navbar = () => {
                 AuctionHub
               </Link>
             </div>
-            {user && (
-              <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <Link
-                  to="/dashboard"
-                  className="border-transparent text-gray-500 hover:border-indigo-500 hover:text-indigo-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  to="/items"
-                  className="border-transparent text-gray-500 hover:border-indigo-500 hover:text-indigo-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                >
-                  Items
-                </Link>
-                <Link
-                  to="/categories"
-                  className="border-transparent text-gray-500 hover:border-indigo-500 hover:text-indigo-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                >
-                  Categories
-                </Link>
-                <Link
-                  to="/auction-results"
-                  className="border-transparent text-gray-500 hover:border-indigo-500 hover:text-indigo-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                >
-                  Results
-                </Link>
-              </div>
-            )}
           </div>
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
             {user ? (
               <div className="flex items-center space-x-4">
                 <Link
-                  to="/profile"
-                  className="text-gray-500 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium"
+                  to="/contact"
+                  className="border-transparent text-gray-500 hover:border-indigo-500 hover:text-indigo-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                 >
-                  Profile
+                  Contact
                 </Link>
                 <button
                   onClick={handleLogout}
@@ -94,4 +66,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar; 
+export default Navbar;

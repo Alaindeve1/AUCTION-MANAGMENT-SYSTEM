@@ -2,7 +2,6 @@ package com.auction.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -39,7 +38,6 @@ public class AuctionResult {
     private User winner;
 
     @NotNull
-    @Positive
     private BigDecimal finalPrice;
 
     @Enumerated(EnumType.STRING)
@@ -49,6 +47,22 @@ public class AuctionResult {
     protected void onCreate() {
         if (resultStatus == null) {
             resultStatus = ResultStatus.PENDING;
+        }
+        validateFinalPrice();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        validateFinalPrice();
+    }
+
+    private void validateFinalPrice() {
+        if (resultStatus == ResultStatus.CANCELLED) {
+            if (finalPrice == null) {
+                finalPrice = BigDecimal.ZERO;
+            }
+        } else if (finalPrice == null || finalPrice.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Final price must be greater than 0 for non-cancelled auctions");
         }
     }
 

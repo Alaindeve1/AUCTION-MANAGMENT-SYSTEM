@@ -27,58 +27,43 @@ public class AdminAuthController {
     private JwtService jwtService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> adminLogin(@RequestBody AdminLoginRequest request) {
-        try {
-            User user = userRepository.findByUsername(request.getUsername())
-                    .orElseThrow(() -> new RuntimeException("Invalid credentials"));
-                    
-            if (user.getRole() != User.UserRole.ADMIN) {
-                return ResponseEntity.status(403).body("Not authorized as admin");
-            }
-            
-            if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-                Map<String, String> error = new HashMap<>();
-                error.put("message", "Invalid credentials");
-                return ResponseEntity.status(401).body(error);
-            }
-            
-            String token = jwtService.generateToken(user.getId(), user.getUsername(), user.getEmail(), user.getRole().name());
-            Map<String, Object> response = new HashMap<>();
-            response.put("token", token);
-            response.put("username", user.getUsername());
-            response.put("role", user.getRole());
-            response.put("email", user.getEmail());
-            
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+    public ResponseEntity<?> login(@RequestBody AdminLoginRequest request) {
+        User admin = userRepository.findByUsername(request.getUsername())
+                .orElse(null);
+
+        if (admin == null || !passwordEncoder.matches(request.getPassword(), admin.getPasswordHash())) {
+            return ResponseEntity.badRequest().body("Invalid credentials");
         }
+
+        if (admin.getRole() != User.Role.ADMIN) {
+            return ResponseEntity.badRequest().body("User is not an admin");
+        }
+
+        String token = jwtService.generateToken(admin);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", token);
+        response.put("user", admin);
+        
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/validate")
-    public ResponseEntity<?> validateAdminToken(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(401).body("Missing or invalid Authorization header");
+            return ResponseEntity.badRequest().body("Invalid token format");
         }
-        
+
         String token = authHeader.substring(7);
-        try {
-            String username = jwtService.extractUsername(token);
-            User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-                
-            if (user.getRole() != User.UserRole.ADMIN) {
-                return ResponseEntity.status(403).body("Not authorized as admin");
-            }
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("username", username);
-            response.put("role", user.getRole());
-            response.put("email", user.getEmail());
-            
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(401).body("Invalid token");
+        String email = jwtService.extractEmail(token);
+        
+        User admin = userRepository.findByEmail(email)
+                .orElse(null);
+
+        if (admin == null || admin.getRole() != User.Role.ADMIN) {
+            return ResponseEntity.badRequest().body("Invalid admin token");
         }
+
+        return ResponseEntity.ok().build();
     }
 } 

@@ -18,14 +18,17 @@ import {
   CardContent,
   CardMedia,
   CardActions,
-  Chip
+  Chip,
+  CircularProgress
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Gavel as GavelIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Gavel as GavelIcon, Search as SearchIcon } from '@mui/icons-material';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import DataTable from '../../components/common/DataTable';
 import api from '../../utils/api';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
 
 const validationSchema = Yup.object({
   title: Yup.string().required('Title is required'),
@@ -46,6 +49,7 @@ const Items = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusTab, setStatusTab] = useState('ACTIVE'); // ACTIVE, PENDING, COMPLETED
+  const [loading, setLoading] = useState(false);
 
   const formik = useFormik({
     initialValues: {
@@ -74,28 +78,47 @@ const Items = () => {
 
   const fetchItems = async () => {
     try {
-      const response = await api.get('/items', {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      // If no token, just fetch items without authentication
+      const response = await api.get(`/api/items/status/${statusTab}`, {
         params: {
-          page: page + 1,
+          page: page,
           size: rowsPerPage,
-          search: searchTerm,
-        },
+          ...(searchTerm && { query: searchTerm })
+        }
       });
-      // Filter on frontend
-      const filtered = (response.data.content || []).filter(item => item.itemStatus !== 'DRAFT' && item.itemStatus === statusTab);
-      setItems(filtered);
-      setTotalCount(filtered.length);
+
+      if (response.data) {
+        setItems(response.data.content || []);
+        setTotalCount(response.data.totalElements || 0);
+      } else {
+        setItems([]);
+        setTotalCount(0);
+      }
     } catch (error) {
-      toast.error('Failed to fetch items');
+      console.error('Error fetching items:', error);
+      if (error.response?.status === 401) {
+        toast.error('Please log in to view items');
+        window.location.href = '/login';
+      } else {
+        toast.error('Failed to fetch items');
+      }
+      setItems([]);
+      setTotalCount(0);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchCategories = async () => {
     try {
-      const response = await api.get('/categories');
+      const response = await api.get('/api/categories');
       setCategories(response.data);
     } catch (error) {
-      toast.error('Failed to fetch categories');
+      console.error('Error fetching categories:', error);
+      toast.error('Failed to load categories');
     }
   };
 
@@ -136,6 +159,15 @@ const Items = () => {
       }
     }
   };
+
+  function getTimeLeft(endDate) {
+    if (!endDate) return null;
+    const diff = new Date(endDate) - new Date();
+    if (diff <= 0) return 'Ended';
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff / (1000 * 60)) % 60);
+    return `${hours}h ${minutes}m left`;
+  }
 
   const columns = [
     { id: 'title', label: 'Title', minWidth: 170 },
@@ -194,64 +226,83 @@ const Items = () => {
         <Tab label="Completed" value="COMPLETED" />
       </Tabs>
       <Grid container spacing={3}>
-        {items.length === 0 && (
-          <Grid item xs={12}>
+        {loading ? (
+          <Grid item xs={12} key="loading-state">
             <Box textAlign="center" py={8}>
-              <Typography color="text.secondary">No items found in this category.</Typography>
+              <CircularProgress />
             </Box>
           </Grid>
-        )}
-        {items.map((item) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={item.id}>
-            <Card sx={{ display: 'flex', flexDirection: 'column', height: '100%', borderRadius: 3, boxShadow: 3 }}>
-              {item.imageUrl && (
-                <CardMedia
-                  component="img"
-                  height="180"
-                  image={item.imageUrl}
-                  alt={item.title}
-                  sx={{ objectFit: 'cover', borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
-                />
-              )}
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Box display="flex" alignItems="center" justifyContent="space-between">
-                  <Typography variant="h6" fontWeight={600} gutterBottom>{item.title}</Typography>
-                  <FavoriteButton
-                    itemId={item.id}
-                    initialFavorite={!!item.isFavorite}
-                    onChange={favorited => {
-                      setItems(prev => prev.map(i => i.id === item.id ? { ...i, isFavorite: favorited } : i));
-                    }}
-                  />
-                </Box>
-                <Typography variant="body2" color="text.secondary" mb={1}>{item.description}</Typography>
-                <Box display="flex" alignItems="center" gap={1} mb={1}>
-                  <Chip label={item.itemStatus} color={
-                    item.itemStatus === 'ACTIVE' ? 'success' :
-                    item.itemStatus === 'PENDING' ? 'warning' :
-                    item.itemStatus === 'COMPLETED' ? 'info' : 'default'
-                  } size="small" />
-                  <Typography variant="body2" color="text.secondary">Starting at <b>${item.startingPrice}</b></Typography>
-                </Box>
-                <Typography variant="caption" color="text.secondary">
-                  Category: {categories.find(c => c.id === item.categoryId)?.name || 'N/A'}
-                </Typography>
-              </CardContent>
-              <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="small"
-                  startIcon={<GavelIcon />}
-                  href={`/items/${item.id}`}
-                  sx={{ borderRadius: 2 }}
-                >
-                  {item.itemStatus === 'ACTIVE' ? 'Bid Now' : 'View'}
-                </Button>
-              </CardActions>
-            </Card>
+        ) : items.length === 0 ? (
+          <Grid item xs={12} key="empty-state">
+            <Box textAlign="center" py={8}>
+              <img src="https://undraw.co/api/illustrations/empty_cart.svg" alt="No items" style={{ width: 180, margin: '0 auto 16px' }} />
+              <Typography color="text.secondary" fontSize={18} mb={2}>No items found in this category.</Typography>
+              <Typography color="text.secondary">Try a different tab or search term.</Typography>
+            </Box>
           </Grid>
-        ))}
+        ) : (
+          items.map((item) => (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={item.itemId || item.id}>
+              <Card sx={{ display: 'flex', flexDirection: 'column', height: '100%', borderRadius: 3, boxShadow: 3, transition: 'transform 0.2s, box-shadow 0.2s', '&:hover': { transform: 'translateY(-6px) scale(1.03)', boxShadow: 6 } }}>
+                {item.imageUrl && (
+                  <CardMedia
+                    component="img"
+                    height="180"
+                    image={item.imageUrl}
+                    alt={item.title}
+                    sx={{ objectFit: 'cover', borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
+                  />
+                )}
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Box display="flex" alignItems="center" justifyContent="space-between">
+                    <Typography variant="h6" fontWeight={600} gutterBottom>{item.title}</Typography>
+                    <FavoriteButton
+                      itemId={item.itemId || item.id}
+                      initialFavorite={!!item.isFavorite}
+                      onChange={favorited => {
+                        setItems(prev => prev.map(i => (i.itemId || i.id) === (item.itemId || item.id) ? { ...i, isFavorite: favorited } : i));
+                      }}
+                    />
+                  </Box>
+                  <Typography variant="body2" color="text.secondary" mb={1}>{item.description}</Typography>
+                  <Box display="flex" alignItems="center" gap={1} mb={1}>
+                    <Chip label={item.itemStatus} color={
+                      item.itemStatus === 'ACTIVE' ? 'success' :
+                      item.itemStatus === 'PENDING' ? 'warning' :
+                      item.itemStatus === 'COMPLETED' ? 'info' : 'default'
+                    } size="small" />
+                    <Typography variant="body2" color="text.secondary">Starting at <b>${item.startingPrice}</b></Typography>
+                  </Box>
+                  <Box display="flex" alignItems="center" gap={1} mb={1}>
+                    <AccessTimeIcon fontSize="small" color="action" />
+                    <Typography variant="caption" color="text.secondary">
+                      {getTimeLeft(item.endDate)}
+                    </Typography>
+                    <LocalFireDepartmentIcon fontSize="small" color={item.bidsCount > 10 ? 'error' : 'disabled'} sx={{ ml: 2 }} />
+                    <Typography variant="caption" color="text.secondary">
+                      {item.bidsCount || 0} bids
+                    </Typography>
+                  </Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Category: {categories.find(c => c.id === item.categoryId)?.name || 'N/A'}
+                  </Typography>
+                </CardContent>
+                <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    size="small"
+                    startIcon={<GavelIcon />}
+                    href={`/items/${item.id}`}
+                    sx={{ borderRadius: 2 }}
+                  >
+                    {item.itemStatus === 'ACTIVE' ? 'Bid Now' : 'View'}
+                  </Button>
+                </CardActions>
+              </Card>
+            </Grid>
+          ))
+        )}
       </Grid>
       <Box mt={4} display="flex" justifyContent="center">
         <DataTable
@@ -260,12 +311,20 @@ const Items = () => {
           page={page}
           rowsPerPage={rowsPerPage}
           totalCount={totalCount}
-          onPageChange={(_, newPage) => setPage(newPage)}
+          onPageChange={(_, newPage) => {
+            setPage(newPage);
+            setLoading(true);
+          }}
           onRowsPerPageChange={(event) => {
             setRowsPerPage(parseInt(event.target.value, 10));
             setPage(0);
+            setLoading(true);
           }}
-          onSearch={setSearchTerm}
+          onSearch={(term) => {
+            setSearchTerm(term);
+            setPage(0);
+            setLoading(true);
+          }}
           searchPlaceholder="Search items..."
           hideTable
         />

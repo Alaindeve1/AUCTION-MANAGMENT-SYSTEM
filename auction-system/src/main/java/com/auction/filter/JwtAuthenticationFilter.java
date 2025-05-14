@@ -28,7 +28,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getServletPath();
         // Robustly skip JWT filter for public endpoints
         return pathMatcher.match("/api/auth/**", path)
-            || pathMatcher.match("/api/notifications/general{/**}", path);
+            || pathMatcher.match("/api/notifications/general", path);
     }
 
     private final JwtService jwtService;
@@ -62,7 +62,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
             
-            if (jwtService.validateToken(jwt, userDetails)) {
+            if (jwtService.isTokenValid(jwt, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                     userDetails,
                     null,

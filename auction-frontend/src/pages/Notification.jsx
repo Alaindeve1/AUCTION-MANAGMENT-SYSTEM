@@ -14,7 +14,7 @@ import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import api from '../utils/api';
 
-const Notification = () => {
+const UserNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -26,23 +26,19 @@ const Notification = () => {
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-      const userId = localStorage.getItem('userId') || 1;
-      // Fetch general notifications (ALL + SIGNED_IN)
-      const generalRes = await api.get('/notifications/general');
-      // Fetch user-specific notifications
-      const userRes = await api.get(`/notifications/user/${userId}`);
-      setNotifications([...(generalRes.data || []), ...(userRes.data || [])]);
-      setError(null);
+        // Fetch general notifications without authorization
+        const generalRes = await api.get('/notifications/general');
+        const userId = localStorage.getItem('userId') || 1;
+        // Fetch user-specific notifications without authorization
+        const userRes = await api.get(`/notifications/user/${userId}`);
+        setNotifications([...(generalRes.data || []), ...(userRes.data || [])]);
+        setError(null);
     } catch (err) {
-      if (err.response && err.response.status === 401) {
-        setError('Please log in to view your notifications.');
-      } else {
         setError('Failed to load notifications.');
-      }
-      setNotifications([]);
+        setNotifications([]);
     }
     setLoading(false);
-  };
+};
 
 
 
@@ -121,4 +117,4 @@ const Notification = () => {
   );
 };
 
-export default Notification;
+export default UserNotifications;

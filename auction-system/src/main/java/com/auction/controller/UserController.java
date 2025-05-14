@@ -1,5 +1,6 @@
 package com.auction.controller;
 
+import com.auction.dto.RegisterRequest;
 import com.auction.model.User;
 import com.auction.service.UserService;
 import org.springframework.http.HttpStatus;
@@ -35,8 +36,8 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
-        return new ResponseEntity<>(userService.createUser(user), HttpStatus.CREATED);
+    public ResponseEntity<User> createUser(@Valid @RequestBody RegisterRequest request) {
+        return new ResponseEntity<>(userService.createUser(request), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
@@ -57,5 +58,11 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable("id") Long userId) {
         userService.deleteUser(userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
+        User createdUser = userService.createUser(request);
+        return ResponseEntity.ok(createdUser);
     }
 }

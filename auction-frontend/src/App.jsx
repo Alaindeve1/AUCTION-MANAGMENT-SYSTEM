@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './utils/auth';
 import Layout from './components/Layout';
 import Login from './pages/auth/Login';
+import UserNotifications from './pages/Notification';
 import Signup from './pages/auth/Signup';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
@@ -25,11 +26,15 @@ import AdminItemsPage from './admin/AdminItemsPage';
 import Dashboard from './pages/Dashboard.jsx';
 import Items from './pages/items/Items';
 import Bids from './pages/Bids';
-import Watchlist from './pages/Watchlist';
 import Wins from './pages/Wins';
-import Notification from './pages/Notification';
-
+import Contact from './pages/Contact';
 import Profile from './pages/Profile';
+import { ThemeProvider } from '@mui/material/styles';
+import { CssBaseline } from '@mui/material';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import theme from './theme';
+
 // Test component
 const TestComponent = () => {
   return (
@@ -58,11 +63,11 @@ const router = createBrowserRouter(
         <Route path="/profile" element={<Profile />} />
         <Route path="/items" element={<Items />} />
         <Route path="/bids" element={<Bids />} />
-        <Route path="/watchlist" element={<Watchlist />} />
         <Route path="/wins" element={<Wins />} />
-        <Route path="/notifications" element={<Notification />} />
+        <Route path="/contact" element={<Contact />} />
         <Route path="/settings" element={<div>Settings Content</div>} />
         <Route path="/help" element={<div>Help Content</div>} />
+        <Route path="/notifications" element={<UserNotifications />} />
       </Route>
 
       {/* Admin Routes */}
@@ -80,17 +85,30 @@ const router = createBrowserRouter(
   }
 );
 
-function App() {
+const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <Toaster position="top-right" />
-      <AuthProvider>
-        <AdminAuthProvider>
-          <RouterProvider router={router} />
-        </AdminAuthProvider>
-      </AuthProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
+        <AuthProvider>
+          <AdminAuthProvider>
+            <RouterProvider router={router} />
+          </AdminAuthProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
-}
+};
 
 export default App;

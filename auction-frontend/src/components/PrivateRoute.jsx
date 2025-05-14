@@ -13,20 +13,32 @@ const PrivateRoute = ({ children }) => {
       const token = localStorage.getItem('token');
       
       if (!token) {
+        console.log('No token found in localStorage');
         setIsAuthenticated(false);
         setIsLoading(false);
         return;
       }
 
       try {
-        // Add token to request headers
-        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        console.log('Validating token...');
         
         // Make a request to validate the token
-        await api.get('/auth/validate');
+        const response = await api.get('/api/auth/validate', {
+          headers: {
+            Authorization: `Bearer ${token.trim()}`
+          }
+        });
+        
+        console.log('Token validation response:', response.data);
         setIsAuthenticated(true);
       } catch (error) {
-        console.error('Token validation failed:', error);
+        console.error('Token validation failed:', {
+          error,
+          status: error.response?.status,
+          data: error.response?.data,
+          headers: error.response?.headers
+        });
+        
         // If token is invalid, remove it
         localStorage.removeItem('token');
         delete api.defaults.headers.common['Authorization'];

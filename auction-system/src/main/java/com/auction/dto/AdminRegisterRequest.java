@@ -5,20 +5,20 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
-public class AdminLoginRequest {
-    @NotBlank(message = "Username is required")
-    private String username;
-
+public class AdminRegisterRequest {
+    @NotBlank(message = "Email is required")
+    private String email;
+    
     @NotBlank(message = "Password is required")
     @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
 
-    public String getUsername() {
-        return username;
+    public String getEmail() {
+        return email;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getPassword() {

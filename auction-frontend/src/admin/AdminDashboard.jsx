@@ -49,42 +49,30 @@ const AdminDashboard = () => {
 
   // AI Insights (simple AI logic)
   const aiInsights = [];
-  if (bidsStats.totalBids > 100) aiInsights.push('🔥 Bid activity is high!');
-  if (revenue > 10000) aiInsights.push('💰 Revenue is strong this month.');
-  if (bidsStats.uniqueBidders > 20) aiInsights.push('👥 Lots of unique bidders.');
-  if (recentUsers.length > 0) aiInsights.push(`🆕 New user: ${recentUsers[0]?.username}`);
-  if (recentResults.length > 0) aiInsights.push(`🏆 Latest auction: ${recentResults[0]?.itemTitle || recentResults[0]?.itemId}`);
+  if (bidsStats.totalBids > 100) aiInsights.push({ id: 'high-bids', text: '🔥 Bid activity is high!' });
+  if (revenue > 10000) aiInsights.push({ id: 'strong-revenue', text: '💰 Revenue is strong this month.' });
+  if (bidsStats.uniqueBidders > 20) aiInsights.push({ id: 'many-bidders', text: '👥 Lots of unique bidders.' });
+  if (recentUsers.length > 0) aiInsights.push({ id: 'new-user', text: `🆕 New user: ${recentUsers[0]?.username}` });
+  if (recentResults.length > 0) aiInsights.push({ id: 'latest-auction', text: `🏆 Latest auction: ${recentResults[0]?.itemTitle || recentResults[0]?.itemId}` });
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-4xl font-bold mb-8 text-indigo-700">Admin Dashboard</h1>
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-        <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-          <UserGroupIcon className="w-8 h-8 text-indigo-600 mb-2" />
-          <div className="text-3xl font-bold text-indigo-700">{users.length}</div>
-          <div className="text-gray-600">Users</div>
-        </div>
-        <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-          <CubeIcon className="w-8 h-8 text-indigo-600 mb-2" />
-          <div className="text-3xl font-bold text-indigo-700">{users.filter(u => u.userStatus === 'ACTIVE').length}</div>
-          <div className="text-gray-600">Active Users</div>
-        </div>
-        <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-          <ChartBarIcon className="w-8 h-8 text-indigo-600 mb-2" />
-          <div className="text-3xl font-bold text-indigo-700">{bidsStats.totalBids}</div>
-          <div className="text-gray-600">Total Bids</div>
-        </div>
-        <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-          <CurrencyDollarIcon className="w-8 h-8 text-indigo-600 mb-2" />
-          <div className="text-3xl font-bold text-indigo-700">${revenue.toLocaleString()}</div>
-          <div className="text-gray-600">Revenue</div>
-        </div>
-        <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-          <ClockIcon className="w-8 h-8 text-indigo-600 mb-2" />
-          <div className="text-3xl font-bold text-indigo-700">{bidsStats.activeAuctions}</div>
-          <div className="text-gray-600">Active Auctions</div>
-        </div>
+        {cardConfig.map(card => (
+          <div key={card.key} className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
+            {card.icon}
+            <div className="text-3xl font-bold text-indigo-700">
+              {card.key === 'users' && users.length}
+              {card.key === 'activeUsers' && users.filter(u => u.userStatus === 'ACTIVE').length}
+              {card.key === 'totalBids' && bidsStats.totalBids}
+              {card.key === 'revenue' && `$${revenue.toLocaleString()}`}
+              {card.key === 'activeAuctions' && bidsStats.activeAuctions}
+            </div>
+            <div className="text-gray-600">{card.name}</div>
+          </div>
+        ))}
       </div>
 
       {/* Chart & AI Insights */}
@@ -107,9 +95,9 @@ const AdminDashboard = () => {
             <span className="font-semibold text-lg text-indigo-800">AI Insights</span>
           </div>
           <ul className="space-y-2">
-            {aiInsights.length === 0 && <li className="text-gray-500">No insights at this time.</li>}
-            {aiInsights.map((insight, idx) => (
-              <li key={insight.id || insight.key || insight.title || idx} className="bg-white rounded px-3 py-2 shadow-sm text-gray-700">{insight}</li>
+            {aiInsights.length === 0 && <li key="no-insights" className="text-gray-500">No insights at this time.</li>}
+            {aiInsights.map(insight => (
+              <li key={insight.id} className="bg-white rounded px-3 py-2 shadow-sm text-gray-700">{insight.text}</li>
             ))}
           </ul>
         </div>
@@ -120,11 +108,11 @@ const AdminDashboard = () => {
         <div className="bg-white rounded-xl shadow p-6">
           <div className="font-semibold text-lg text-gray-700 mb-4">Recent Users</div>
           <ul className="divide-y divide-gray-100">
-            {recentUsers.length === 0 && <li className="text-gray-400">No recent users.</li>}
-            {recentUsers.map(u => (
-              <li key={u.userId} className="py-2 flex flex-col">
-                <span className="font-medium text-gray-900">{u.username}</span>
-                <span className="text-xs text-gray-500">{u.email}</span>
+            {recentUsers.length === 0 && <li key="no-users" className="text-gray-400">No recent users.</li>}
+            {recentUsers.map(user => (
+              <li key={user.userId} className="py-2 flex flex-col">
+                <span className="font-medium text-gray-900">{user.username}</span>
+                <span className="text-xs text-gray-500">{user.email}</span>
               </li>
             ))}
           </ul>
@@ -132,11 +120,11 @@ const AdminDashboard = () => {
         <div className="bg-white rounded-xl shadow p-6">
           <div className="font-semibold text-lg text-gray-700 mb-4">Recent Auctions</div>
           <ul className="divide-y divide-gray-100">
-            {recentResults.length === 0 && <li className="text-gray-400">No recent auctions.</li>}
-            {recentResults.map(r => (
-              <li key={r.resultId || r.itemId} className="py-2 flex flex-col">
-                <span className="font-medium text-gray-900">{r.itemTitle || r.itemId}</span>
-                <span className="text-xs text-gray-500">{r.resultStatus} &bull; {r.endDate ? new Date(r.endDate).toLocaleDateString() : '-'}</span>
+            {recentResults.length === 0 && <li key="no-auctions" className="text-gray-400">No recent auctions.</li>}
+            {recentResults.map(result => (
+              <li key={result.resultId || result.itemId} className="py-2 flex flex-col">
+                <span className="font-medium text-gray-900">{result.itemTitle || result.itemId}</span>
+                <span className="text-xs text-gray-500">{result.resultStatus} &bull; {result.endDate ? new Date(result.endDate).toLocaleDateString() : '-'}</span>
               </li>
             ))}
           </ul>

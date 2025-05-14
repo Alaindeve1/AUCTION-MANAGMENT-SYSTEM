@@ -27,8 +27,13 @@ const Login = () => {
     onSubmit: async (values) => {
       try {
         console.log('Login attempt with values:', values);
-        const response = await api.post('/auth/login', values);
+        const response = await api.post('/api/auth/login', values);
         console.log('Login response:', response.data);
+        
+        if (!response.data.token) {
+          throw new Error('No token received from server');
+        }
+        
         localStorage.setItem('token', response.data.token);
         toast.success('Login successful!');
         
@@ -36,9 +41,14 @@ const Login = () => {
         const from = location.state?.from?.pathname || '/dashboard';
         navigate(from, { replace: true });
       } catch (error) {
-        console.error('Login error:', error.response?.data || error.message);
-        setError(error.response?.data || 'Login failed');
-        toast.error(error.response?.data || 'Login failed');
+        console.error('Login error details:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message,
+          headers: error.response?.headers
+        });
+        setError(error.response?.data?.message || error.message || 'Login failed');
+        toast.error(error.response?.data?.message || error.message || 'Login failed');
       }
     },
   });

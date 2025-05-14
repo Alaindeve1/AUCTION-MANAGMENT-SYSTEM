@@ -3,7 +3,7 @@ package com.auction.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import lombok.ToString;
+import lombok.Data;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
@@ -17,6 +17,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+@Data
 @Entity
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Table(name = "users")
@@ -24,7 +25,6 @@ import java.util.List;
     generator = ObjectIdGenerators.PropertyGenerator.class,
     property = "userId"
 )
-@ToString(exclude = {"listedItems", "bids", "wonAuctions"})
 public class User implements UserDetails {
 
     @Id
@@ -32,23 +32,27 @@ public class User implements UserDetails {
     private Long userId;
 
     @NotBlank
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String username;
 
     @NotBlank
     @Email
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String email;
 
     @NotBlank
+    @Column(nullable = false)
     private String passwordHash;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private UserStatus userStatus;
 
     @Enumerated(EnumType.STRING)
-    private UserRole role;
+    @Column(nullable = false)
+    private Role role;
 
+    @Column(nullable = false)
     private LocalDateTime registrationDate;
 
     @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -81,8 +85,8 @@ public class User implements UserDetails {
     public UserStatus getUserStatus() { return userStatus; }
     public void setUserStatus(UserStatus userStatus) { this.userStatus = userStatus; }
 
-    public UserRole getRole() { return role; }
-    public void setRole(UserRole role) { this.role = role; }
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
 
     public LocalDateTime getRegistrationDate() { return registrationDate; }
     public void setRegistrationDate(LocalDateTime registrationDate) { this.registrationDate = registrationDate; }
@@ -103,7 +107,7 @@ public class User implements UserDetails {
             userStatus = UserStatus.ACTIVE;
         }
         if (role == null) {
-            role = UserRole.USER;
+            role = Role.USER;
         }
     }
 
@@ -138,10 +142,13 @@ public class User implements UserDetails {
     }
 
     public enum UserStatus {
-        ACTIVE, INACTIVE, SUSPENDED
+        PENDING,
+        ACTIVE,
+        SUSPENDED
     }
 
-    public enum UserRole {
-        ADMIN, USER
+    public enum Role {
+        USER,
+        ADMIN
     }
 }

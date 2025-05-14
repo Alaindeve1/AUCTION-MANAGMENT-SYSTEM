@@ -56,9 +56,10 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/admin/login").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/items/status/**").permitAll()
                 .requestMatchers("/api/items/owner/**", "/api/favorites/**").authenticated()
-.requestMatchers(HttpMethod.POST, "/api/notifications/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/notifications/general").permitAll()
+                .requestMatchers("/api/notifications/general").permitAll()
+                .requestMatchers("/api/notifications/**").authenticated()
                 .anyRequest().permitAll()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
