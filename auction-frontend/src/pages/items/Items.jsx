@@ -48,7 +48,7 @@ const Items = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusTab, setStatusTab] = useState('ACTIVE'); // ACTIVE, PENDING, COMPLETED
+  const [statusTab, setStatusTab] = useState('ACTIVE'); // ACTIVE, DRAFT, ENDED, SOLD
   const [loading, setLoading] = useState(false);
 
   const formik = useFormik({
@@ -79,9 +79,6 @@ const Items = () => {
   const fetchItems = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      
-      // If no token, just fetch items without authentication
       const response = await api.get(`/api/items/status/${statusTab}`, {
         params: {
           page: page,
@@ -99,11 +96,10 @@ const Items = () => {
       }
     } catch (error) {
       console.error('Error fetching items:', error);
-      if (error.response?.status === 401) {
-        toast.error('Please log in to view items');
-        window.location.href = '/login';
+      if (error.response?.status === 404) {
+        toast.error('No items found in this category');
       } else {
-        toast.error('Failed to fetch items');
+        toast.error('Unable to load items. Please try again later.');
       }
       setItems([]);
       setTotalCount(0);
@@ -118,7 +114,7 @@ const Items = () => {
       setCategories(response.data);
     } catch (error) {
       console.error('Error fetching categories:', error);
-      toast.error('Failed to load categories');
+      toast.error('Unable to load categories. Please try again later.');
     }
   };
 
@@ -222,8 +218,9 @@ const Items = () => {
         sx={{ mb: 3 }}
       >
         <Tab label="Active" value="ACTIVE" />
-        <Tab label="Pending" value="PENDING" />
-        <Tab label="Completed" value="COMPLETED" />
+        <Tab label="Draft" value="DRAFT" />
+        <Tab label="Ended" value="ENDED" />
+        <Tab label="Sold" value="SOLD" />
       </Tabs>
       <Grid container spacing={3}>
         {loading ? (
@@ -268,8 +265,9 @@ const Items = () => {
                   <Box display="flex" alignItems="center" gap={1} mb={1}>
                     <Chip label={item.itemStatus} color={
                       item.itemStatus === 'ACTIVE' ? 'success' :
-                      item.itemStatus === 'PENDING' ? 'warning' :
-                      item.itemStatus === 'COMPLETED' ? 'info' : 'default'
+                      item.itemStatus === 'DRAFT' ? 'warning' :
+                      item.itemStatus === 'ENDED' ? 'error' :
+                      item.itemStatus === 'SOLD' ? 'info' : 'default'
                     } size="small" />
                     <Typography variant="body2" color="text.secondary">Starting at <b>${item.startingPrice}</b></Typography>
                   </Box>

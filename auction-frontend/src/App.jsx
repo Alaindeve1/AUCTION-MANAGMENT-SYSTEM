@@ -56,12 +56,12 @@ const router = createBrowserRouter(
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/items" element={<Items />} />
       
       {/* Protected User Routes */}
       <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/items" element={<Items />} />
         <Route path="/bids" element={<Bids />} />
         <Route path="/wins" element={<Wins />} />
         <Route path="/contact" element={<Contact />} />

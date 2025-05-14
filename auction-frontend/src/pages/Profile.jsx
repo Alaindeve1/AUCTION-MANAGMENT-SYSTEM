@@ -14,6 +14,7 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import api from '../utils/api';
+import { toast } from 'react-hot-toast';
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -29,17 +30,18 @@ const Profile = () => {
   const fetchProfile = async () => {
     setLoading(true);
     try {
-      // Replace with actual logged-in user ID
       const userId = localStorage.getItem('userId') || 1;
-      const res = await api.get(`/users/${userId}`);
-      setUser(res.data);
+      const response = await api.get(`/api/users/${userId}`);
+      setUser(response.data);
       setForm({
-        fullName: res.data.fullName || '',
-        email: res.data.email || '',
-        username: res.data.username || '',
-        phone: res.data.phone || '',
+        fullName: response.data.fullName || '',
+        email: response.data.email || '',
+        username: response.data.username || '',
+        phone: response.data.phone || '',
       });
-    } catch (err) {
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      toast.error('Failed to load profile');
       setUser(null);
     }
     setLoading(false);

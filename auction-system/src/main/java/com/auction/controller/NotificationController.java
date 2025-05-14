@@ -20,55 +20,69 @@ public class NotificationController {
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<NotificationDto>> getNotificationsByUser(@PathVariable Long userId) {
-        List<NotificationDto> dtos = notificationService.getNotificationsByUser(userId).stream()
-            .map(n -> new NotificationDto(
-                n.getId(),
-                n.getTitle(),
-                n.getMessage(),
-                n.getTarget(),
-                n.isRead(),
-                n.getCreatedAt()
-            ))
-            .toList();
-        return ResponseEntity.ok(dtos);
+        try {
+            List<NotificationDto> dtos = notificationService.getNotificationsByUser(userId).stream()
+                .map(n -> new NotificationDto(
+                    n.getId(),
+                    n.getTitle(),
+                    n.getMessage(),
+                    n.getTarget(),
+                    n.isRead(),
+                    n.getCreatedAt()
+                ))
+                .toList();
+            return ResponseEntity.ok(dtos);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @GetMapping("/general")
     public ResponseEntity<List<NotificationDto>> getGeneralNotifications() {
-        List<NotificationDto> dtos = new ArrayList<>();
-        
-        // Get ALL notifications
-        List<Notification> allNotifications = notificationService.getNotificationsByTarget("ALL");
-        dtos.addAll(allNotifications.stream()
-            .map(n -> new NotificationDto(
-                n.getId(),
-                n.getTitle(),
-                n.getMessage(),
-                n.getTarget(),
-                n.isRead(),
-                n.getCreatedAt()
-            ))
-            .collect(Collectors.toList()));
+        try {
+            List<NotificationDto> dtos = new ArrayList<>();
             
-        // Get SIGNED_IN notifications
-        List<Notification> signedInNotifications = notificationService.getNotificationsByTarget("SIGNED_IN");
-        dtos.addAll(signedInNotifications.stream()
-            .map(n -> new NotificationDto(
-                n.getId(),
-                n.getTitle(),
-                n.getMessage(),
-                n.getTarget(),
-                n.isRead(),
-                n.getCreatedAt()
-            ))
-            .collect(Collectors.toList()));
-            
-        return ResponseEntity.ok(dtos);
+            // Get ALL notifications
+            List<Notification> allNotifications = notificationService.getNotificationsByTarget("ALL");
+            dtos.addAll(allNotifications.stream()
+                .map(n -> new NotificationDto(
+                    n.getId(),
+                    n.getTitle(),
+                    n.getMessage(),
+                    n.getTarget(),
+                    n.isRead(),
+                    n.getCreatedAt()
+                ))
+                .collect(Collectors.toList()));
+                
+            // Get SIGNED_IN notifications
+            List<Notification> signedInNotifications = notificationService.getNotificationsByTarget("SIGNED_IN");
+            dtos.addAll(signedInNotifications.stream()
+                .map(n -> new NotificationDto(
+                    n.getId(),
+                    n.getTitle(),
+                    n.getMessage(),
+                    n.getTarget(),
+                    n.isRead(),
+                    n.getCreatedAt()
+                ))
+                .collect(Collectors.toList()));
+                
+            return ResponseEntity.ok(dtos);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @PostMapping
     public ResponseEntity<?> createNotification(@RequestBody NotificationDto dto) {
-        notificationService.createNotification(dto);
-        return ResponseEntity.ok().build();
+        try {
+            notificationService.createNotification(dto);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }

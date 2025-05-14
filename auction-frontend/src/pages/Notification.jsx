@@ -13,34 +13,43 @@ import {
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import api from '../utils/api';
+import { toast } from 'react-hot-toast';
+import { useAuth } from '../utils/auth';
 
 const UserNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchNotifications();
-  }, []);
+  }, [user]);
 
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-        // Fetch general notifications without authorization
-        const generalRes = await api.get('/notifications/general');
-        const userId = localStorage.getItem('userId') || 1;
-        // Fetch user-specific notifications without authorization
-        const userRes = await api.get(`/notifications/user/${userId}`);
-        setNotifications([...(generalRes.data || []), ...(userRes.data || [])]);
-        setError(null);
-    } catch (err) {
-        setError('Failed to load notifications.');
-        setNotifications([]);
+      // Fetch both general and user-specific notifications
+      const [generalResponse, userResponse] = await Promise.all([
+        api.get('/api/notifications/general'),
+        user ? api.get(`/api/notifications/user/${user.userId}`) : Promise.resolve({ data: [] })
+      ]);
+
+      // Combine and sort notifications by creation date
+      const allNotifications = [
+        ...generalResponse.data,
+        ...userResponse.data
+      ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      setNotifications(allNotifications);
+      setError(null);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      setError('Failed to load notifications');
+      toast.error('Failed to load notifications');
     }
     setLoading(false);
-};
-
-
+  };
 
   return (
     <Box p={3}>
@@ -87,10 +96,10 @@ const UserNotifications = () => {
                       <Typography variant="subtitle2" fontWeight={notif.read ? 400 : 700} color="primary.main">
                         {notif.title ? notif.title : 'Notification'}
                       </Typography>
-                      <Typography variant="body1" fontWeight={notif.read ? 400 : 700}>
-                        {notif.message}
-                      </Typography>
                     </Box>
+                    <Typography variant="body1" fontWeight={notif.read ? 400 : 700} mb={1}>
+                      {notif.message}
+                    </Typography>
                     <Typography color="text.secondary" mb={1} fontSize={13}>
                       {notif.createdAt ? new Date(notif.createdAt).toLocaleString() : ''}
                     </Typography>

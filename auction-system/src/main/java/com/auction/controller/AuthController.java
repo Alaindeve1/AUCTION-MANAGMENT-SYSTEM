@@ -98,7 +98,7 @@ public class AuthController {
         if (!userService.existsByEmail(request.getEmail())) {
             return ResponseEntity.ok().build(); // Don't reveal if email exists
         }
-        String token = jwtService.generateToken(request.getEmail());
+        String token = jwtService.generatePasswordResetToken(request.getEmail());
         try {
             emailService.sendPasswordResetEmail(request.getEmail(), token);
         } catch (jakarta.mail.MessagingException e) {

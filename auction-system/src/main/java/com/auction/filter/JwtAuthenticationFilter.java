@@ -1,44 +1,41 @@
 package com.auction.filter;
 
+import com.auction.service.CustomUserDetailsService;
 import com.auction.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.util.AntPathMatcher;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private static final AntPathMatcher pathMatcher = new AntPathMatcher();
-
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String path = request.getServletPath();
-        // Robustly skip JWT filter for public endpoints
-        return pathMatcher.match("/api/auth/**", path)
-            || pathMatcher.match("/api/notifications/general", path);
-    }
-
     private final JwtService jwtService;
+    private final CustomUserDetailsService userDetailsService;
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
-    @Autowired
-    @Lazy
-    private UserDetailsService userDetailsService;
+    private final List<String> publicPaths = Arrays.asList(
+        "/api/auth/**",
+        "/api/admin/login",
+        "/api/items/status/**",
+        "/api/notifications/general",
+        "/api/categories"
+    );
 
-    public JwtAuthenticationFilter(JwtService jwtService) {
+    public JwtAuthenticationFilter(JwtService jwtService, CustomUserDetailsService userDetailsService) {
         this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
     }
 
     @Override
@@ -51,6 +48,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt;
         final String username;
 
+        // Skip filter for public paths
+        String requestPath = request.getRequestURI();
+        if (isPublicPath(requestPath)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -62,7 +66,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
             
-            if (jwtService.isTokenValid(jwt, userDetails)) {
+            if (jwtService.isTokenValid(jwt)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                     userDetails,
                     null,
@@ -73,5 +77,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
         filterChain.doFilter(request, response);
+    }
+
+    private boolean isPublicPath(String requestPath) {
+        return publicPaths.stream()
+            .anyMatch(pattern -> pathMatcher.match(pattern, requestPath));
     }
 } 
