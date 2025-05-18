@@ -21,17 +21,17 @@ public class NotificationController {
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<NotificationDto>> getNotificationsByUser(@PathVariable Long userId) {
         try {
-            List<NotificationDto> dtos = notificationService.getNotificationsByUser(userId).stream()
-                .map(n -> new NotificationDto(
-                    n.getId(),
-                    n.getTitle(),
-                    n.getMessage(),
-                    n.getTarget(),
-                    n.isRead(),
-                    n.getCreatedAt()
-                ))
-                .toList();
-            return ResponseEntity.ok(dtos);
+        List<NotificationDto> dtos = notificationService.getNotificationsByUser(userId).stream()
+            .map(n -> new NotificationDto(
+                n.getId(),
+                n.getTitle(),
+                n.getMessage(),
+                n.getTarget(),
+                n.isRead(),
+                n.getCreatedAt()
+            ))
+            .toList();
+        return ResponseEntity.ok(dtos);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
@@ -45,30 +45,30 @@ public class NotificationController {
             // Get ALL notifications
             List<Notification> allNotifications = notificationService.getNotificationsByTarget("ALL");
             dtos.addAll(allNotifications.stream()
-                .map(n -> new NotificationDto(
-                    n.getId(),
-                    n.getTitle(),
-                    n.getMessage(),
-                    n.getTarget(),
-                    n.isRead(),
-                    n.getCreatedAt()
-                ))
+            .map(n -> new NotificationDto(
+                n.getId(),
+                n.getTitle(),
+                n.getMessage(),
+                n.getTarget(),
+                n.isRead(),
+                n.getCreatedAt()
+            ))
                 .collect(Collectors.toList()));
                 
             // Get SIGNED_IN notifications
             List<Notification> signedInNotifications = notificationService.getNotificationsByTarget("SIGNED_IN");
             dtos.addAll(signedInNotifications.stream()
-                .map(n -> new NotificationDto(
-                    n.getId(),
-                    n.getTitle(),
-                    n.getMessage(),
-                    n.getTarget(),
-                    n.isRead(),
-                    n.getCreatedAt()
-                ))
+            .map(n -> new NotificationDto(
+                n.getId(),
+                n.getTitle(),
+                n.getMessage(),
+                n.getTarget(),
+                n.isRead(),
+                n.getCreatedAt()
+            ))
                 .collect(Collectors.toList()));
                 
-            return ResponseEntity.ok(dtos);
+        return ResponseEntity.ok(dtos);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
@@ -77,8 +77,8 @@ public class NotificationController {
     @PostMapping
     public ResponseEntity<?> createNotification(@RequestBody NotificationDto dto) {
         try {
-            notificationService.createNotification(dto);
-            return ResponseEntity.ok().build();
+        notificationService.createNotification(dto);
+        return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {

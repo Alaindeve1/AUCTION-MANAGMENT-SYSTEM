@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../utils/auth';
-import { api } from '../utils/api';
+import api from '../utils/api';
 import { Grid, Card, CardContent, Typography, Button, Box, CircularProgress } from '@mui/material';
 import { toast } from 'react-toastify';
 

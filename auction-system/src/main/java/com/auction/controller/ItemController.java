@@ -12,6 +12,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import jakarta.validation.Valid;
 import java.time.LocalDateTime;
@@ -21,6 +25,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/items")
+@CrossOrigin(origins = "http://localhost:3000")
 public class ItemController {
 
     private final ItemService itemService;
@@ -32,12 +37,17 @@ public class ItemController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ItemDto>> getAllItems() {
-        List<Item> items = itemService.getAllItems();
-        List<ItemDto> itemDtos = items.stream()
-                .map(ItemDto::fromEntity)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(itemDtos);
+    public ResponseEntity<Page<Item>> getAllItems(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "title") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+        
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? 
+            Sort.Direction.DESC : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
+        
+        return ResponseEntity.ok(itemService.findAll(pageable));
     }
 
     @GetMapping("/{id}")
@@ -47,21 +57,43 @@ public class ItemController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<ItemDto>> searchItems(@RequestParam String keyword) {
-        List<Item> items = itemService.searchItems(keyword);
-        List<ItemDto> itemDtos = items.stream()
-                .map(ItemDto::fromEntity)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(itemDtos);
+    public ResponseEntity<Page<Item>> searchItems(
+            @RequestParam String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(itemService.searchItems(query, pageable));
+    }
+
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<Page<Item>> getItemsByCategory(
+            @PathVariable Long categoryId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(itemService.findByCategoryId(categoryId, pageable));
+    }
+
+    @GetMapping("/seller/{sellerId}")
+    public ResponseEntity<Page<Item>> getItemsBySeller(
+            @PathVariable Long sellerId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(itemService.findBySellerId(sellerId, pageable));
     }
 
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<ItemDto>> getItemsByStatus(@PathVariable Item.ItemStatus status) {
-        List<Item> items = itemService.getItemsByStatus(status);
-        List<ItemDto> itemDtos = items.stream()
-                .map(ItemDto::fromEntity)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(itemDtos);
+    public ResponseEntity<Page<Item>> getItemsByStatus(
+            @PathVariable Item.ItemStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(itemService.findByItemStatus(status, pageable));
     }
 
     @GetMapping("/{id}/bids")

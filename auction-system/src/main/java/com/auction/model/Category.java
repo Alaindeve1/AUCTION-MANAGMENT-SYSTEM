@@ -45,4 +45,16 @@ public class Category {
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
     private List<Item> items = new ArrayList<>();
+
+    public String getName() {
+        return categoryName;
+    }
+
+    public Long getCategoryId() {
+        return categoryId;
+    }
+
+    public String getDescription() {
+        return description;
+    }
 }

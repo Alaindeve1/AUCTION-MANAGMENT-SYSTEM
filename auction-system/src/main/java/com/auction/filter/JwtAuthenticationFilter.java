@@ -13,6 +13,8 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.util.AntPathMatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -20,18 +22,20 @@ import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
-    private final JwtService jwtService;
-    private final CustomUserDetailsService userDetailsService;
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
-
     private final List<String> publicPaths = Arrays.asList(
         "/api/auth/**",
         "/api/admin/login",
         "/api/items/status/**",
         "/api/notifications/general",
-        "/api/categories"
+        "/api/categories",
+        "/swagger-ui/**",
+        "/v3/api-docs/**"
     );
+
+    private final JwtService jwtService;
+    private final CustomUserDetailsService userDetailsService;
 
     public JwtAuthenticationFilter(JwtService jwtService, CustomUserDetailsService userDetailsService) {
         this.jwtService = jwtService;
@@ -44,18 +48,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-        final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String username;
-
-        // Skip filter for public paths
-        String requestPath = request.getRequestURI();
+        final String requestPath = request.getRequestURI();
+        
+        // Skip authentication for public paths
         if (isPublicPath(requestPath)) {
+            logger.debug("Skipping authentication for public path: {}", requestPath);
             filterChain.doFilter(request, response);
             return;
         }
 
+        final String authHeader = request.getHeader("Authorization");
+        final String jwt;
+        final String username;
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            logger.debug("No valid Authorization header found for path: {}", requestPath);
             filterChain.doFilter(request, response);
             return;
         }
@@ -74,8 +81,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 );
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+                logger.debug("Successfully authenticated user: {}", username);
+            } else {
+                logger.debug("Invalid token for user: {}", username);
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Invalid token");
+                return;
             }
         }
+
         filterChain.doFilter(request, response);
     }
 

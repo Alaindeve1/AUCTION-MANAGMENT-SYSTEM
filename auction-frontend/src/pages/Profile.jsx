@@ -9,7 +9,8 @@ import {
   Paper,
   CircularProgress,
   Fade,
-  Divider
+  Divider,
+  useNavigate
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
@@ -17,6 +18,7 @@ import api from '../utils/api';
 import { toast } from 'react-hot-toast';
 
 const Profile = () => {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [edit, setEdit] = useState(false);
   const [form, setForm] = useState({});
@@ -164,6 +166,24 @@ const Profile = () => {
           </Typography>
         </Paper>
       </Box>
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Security
+            </Typography>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => navigate('/auth/2fa-setup')}
+              fullWidth
+              sx={{ mt: 2 }}
+            >
+              Setup Two-Factor Authentication
+            </Button>
+          </Paper>
+        </Grid>
+      </Grid>
     </Fade>
   );
 };

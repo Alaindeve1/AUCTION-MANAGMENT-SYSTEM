@@ -7,6 +7,9 @@ import com.auction.model.User;
 import com.auction.repository.CategoryRepository;
 import com.auction.repository.ItemRepository;
 import com.auction.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,17 +17,17 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Transactional
 public class ItemService {
 
-    private final ItemRepository itemRepository;
+    @Autowired
+    private ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
 
     public ItemService(
-            ItemRepository itemRepository,
             UserRepository userRepository,
             CategoryRepository categoryRepository) {
-        this.itemRepository = itemRepository;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
     }
@@ -125,5 +128,25 @@ public class ItemService {
 
     public List<Item> findExpiredAuctions() {
         return itemRepository.findExpiredAuctions(LocalDateTime.now());
+    }
+
+    public Page<Item> findAll(Pageable pageable) {
+        return itemRepository.findAll(pageable);
+    }
+
+    public Page<Item> searchItems(String query, Pageable pageable) {
+        return itemRepository.searchItems(query, pageable);
+    }
+
+    public Page<Item> findByCategoryId(Long categoryId, Pageable pageable) {
+        return itemRepository.findByCategory_CategoryId(categoryId, pageable);
+    }
+
+    public Page<Item> findBySellerId(Long sellerId, Pageable pageable) {
+        return itemRepository.findBySellerId(sellerId, pageable);
+    }
+
+    public Page<Item> findByItemStatus(Item.ItemStatus status, Pageable pageable) {
+        return itemRepository.findByItemStatus(status, pageable);
     }
 }

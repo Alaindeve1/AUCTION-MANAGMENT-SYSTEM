@@ -104,55 +104,55 @@ const Dashboard = () => {
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {bids.length > 0 && (
-          <div className="bg-white rounded-xl shadow p-6">
-            <div className="font-semibold text-lg text-gray-700 mb-4 flex items-center"><FiActivity className="mr-2"/> Recent Bids</div>
-            <ul className="divide-y divide-gray-100">
-              {bids.slice(-5).reverse().map(bid => (
-                <li key={bid.bidId} className="py-2 flex flex-col">
-                  <span className="text-gray-900 font-medium">{bid.itemTitle || bid.itemId}</span>
-                  <span className="text-xs text-gray-500">Amount: ${bid.bidAmount} &bull; Status: {bid.status || '-'}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+        <div className="bg-white rounded-xl shadow p-6">
+          <div className="font-semibold text-lg text-gray-700 mb-4 flex items-center"><FiActivity className="mr-2"/> Recent Bids</div>
+          <ul className="divide-y divide-gray-100">
+            {bids.slice(-5).reverse().map(bid => (
+              <li key={bid.bidId} className="py-2 flex flex-col">
+                <span className="text-gray-900 font-medium">{bid.itemTitle || bid.itemId}</span>
+                <span className="text-xs text-gray-500">Amount: ${bid.bidAmount} &bull; Status: {bid.status || '-'}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
         )}
         {wins.length > 0 && (
-          <div className="bg-white rounded-xl shadow p-6">
-            <div className="font-semibold text-lg text-gray-700 mb-4 flex items-center"><FiAward className="mr-2"/> Auctions Won</div>
-            <ul className="divide-y divide-gray-100">
-              {wins.slice(-5).reverse().map(win => (
-                <li key={win.resultId} className="py-2 flex flex-col">
-                  <span className="text-gray-900 font-medium">{win.itemTitle || win.itemId}</span>
-                  <span className="text-xs text-gray-500">Final Price: ${win.finalPrice} &bull; {win.endDate ? new Date(win.endDate).toLocaleDateString() : '-'}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+        <div className="bg-white rounded-xl shadow p-6">
+          <div className="font-semibold text-lg text-gray-700 mb-4 flex items-center"><FiAward className="mr-2"/> Auctions Won</div>
+          <ul className="divide-y divide-gray-100">
+            {wins.slice(-5).reverse().map(win => (
+              <li key={win.resultId} className="py-2 flex flex-col">
+                <span className="text-gray-900 font-medium">{win.itemTitle || win.itemId}</span>
+                <span className="text-xs text-gray-500">Final Price: ${win.finalPrice} &bull; {win.endDate ? new Date(win.endDate).toLocaleDateString() : '-'}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
         )}
       </div>
 
       {/* Notifications */}
       {notifications.length > 0 && (
-        <div className="bg-gradient-to-br from-indigo-100 to-indigo-300 rounded-xl shadow p-6 flex flex-col mb-8">
-          <div className="flex items-center mb-4">
-            <FiBell className="w-6 h-6 text-indigo-600 mr-2" />
-            <span className="font-semibold text-lg text-indigo-800">Notifications</span>
-          </div>
-          <ul className="space-y-2">
-            {notifications.slice(-5).reverse().map(n => (
-              <li key={n.id} className={`rounded-lg px-4 py-2 flex items-center gap-2 ${n.read ? 'bg-white text-gray-500' : 'bg-indigo-200 text-indigo-800 font-semibold animate-pulse'}`}>
-                <FiBell className="w-5 h-5" />
-                <span>{n.message}</span>
-                <span className="ml-auto text-xs text-gray-400">{new Date(n.createdAt).toLocaleString()}</span>
-              </li>
-            ))}
-          </ul>
+      <div className="bg-gradient-to-br from-indigo-100 to-indigo-300 rounded-xl shadow p-6 flex flex-col mb-8">
+        <div className="flex items-center mb-4">
+          <FiBell className="w-6 h-6 text-indigo-600 mr-2" />
+          <span className="font-semibold text-lg text-indigo-800">Notifications</span>
         </div>
+        <ul className="space-y-2">
+          {notifications.slice(-5).reverse().map(n => (
+            <li key={n.id} className={`rounded-lg px-4 py-2 flex items-center gap-2 ${n.read ? 'bg-white text-gray-500' : 'bg-indigo-200 text-indigo-800 font-semibold animate-pulse'}`}>
+              <FiBell className="w-5 h-5" />
+              <span>{n.message}</span>
+              <span className="ml-auto text-xs text-gray-400">{new Date(n.createdAt).toLocaleString()}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
       )}
 
       {/* Favorites */}
       {favorites.length > 0 && (
-        <div className="bg-white rounded-xl shadow p-6 mb-8">
+      <div className="bg-white rounded-xl shadow p-6 mb-8">
           <div className="font-semibold text-lg text-gray-700 mb-4 flex items-center">
             <FiStar className="mr-2 text-yellow-500" />
             <span>Your Watchlist</span>
@@ -208,7 +208,7 @@ const Dashboard = () => {
               Browse Items
             </a>
           </div>
-        </div>
+      </div>
       )}
     </div>
   );

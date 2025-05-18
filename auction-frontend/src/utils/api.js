@@ -1,15 +1,17 @@
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
+const API_URL = 'http://localhost:8080';
+
 const api = axios.create({
-  baseURL: 'http://localhost:8080',
-  withCredentials: true,
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true
 });
 
-// Request interceptor
+// Add request interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -25,7 +27,7 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor
+// Add response interceptor
 api.interceptors.response.use(
   (response) => {
     console.log('Response:', response);

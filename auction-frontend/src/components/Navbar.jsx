@@ -1,5 +1,6 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../utils/auth.jsx';
+import GlobalSearch from './GlobalSearch';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -27,6 +28,14 @@ const Navbar = () => {
               </Link>
             </div>
           </div>
+
+          {/* Add GlobalSearch in the middle */}
+          <div className="flex-1 flex items-center justify-center px-4">
+            <div className="w-full max-w-lg">
+              <GlobalSearch />
+            </div>
+          </div>
+
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
             {user ? (
               <div className="flex items-center space-x-4">

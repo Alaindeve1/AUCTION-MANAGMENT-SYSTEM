@@ -40,4 +40,10 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
            "LEFT JOIN FETCH p.subcategories " +
            "WHERE c.categoryId = :id")
     Optional<Category> findByIdWithFullHierarchy(@Param("id") Long id);
+
+    // Search categories by name
+    @Query("SELECT c FROM Category c WHERE LOWER(c.categoryName) LIKE LOWER(CONCAT('%', :query, '%'))")
+    List<Category> searchCategories(@Param("query") String query);
+
+    List<Category> findByCategoryNameContainingIgnoreCase(String categoryName);
 }

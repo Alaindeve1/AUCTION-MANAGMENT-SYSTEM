@@ -241,36 +241,36 @@ const Items = () => {
           items.map((item) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={item.itemId || item.id}>
               <Card sx={{ display: 'flex', flexDirection: 'column', height: '100%', borderRadius: 3, boxShadow: 3, transition: 'transform 0.2s, box-shadow 0.2s', '&:hover': { transform: 'translateY(-6px) scale(1.03)', boxShadow: 6 } }}>
-                {item.imageUrl && (
-                  <CardMedia
-                    component="img"
-                    height="180"
-                    image={item.imageUrl}
-                    alt={item.title}
-                    sx={{ objectFit: 'cover', borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
-                  />
-                )}
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Box display="flex" alignItems="center" justifyContent="space-between">
-                    <Typography variant="h6" fontWeight={600} gutterBottom>{item.title}</Typography>
-                    <FavoriteButton
+              {item.imageUrl && (
+                <CardMedia
+                  component="img"
+                  height="180"
+                  image={item.imageUrl}
+                  alt={item.title}
+                  sx={{ objectFit: 'cover', borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
+                />
+              )}
+              <CardContent sx={{ flexGrow: 1 }}>
+                <Box display="flex" alignItems="center" justifyContent="space-between">
+                  <Typography variant="h6" fontWeight={600} gutterBottom>{item.title}</Typography>
+                  <FavoriteButton
                       itemId={item.itemId || item.id}
-                      initialFavorite={!!item.isFavorite}
-                      onChange={favorited => {
+                    initialFavorite={!!item.isFavorite}
+                    onChange={favorited => {
                         setItems(prev => prev.map(i => (i.itemId || i.id) === (item.itemId || item.id) ? { ...i, isFavorite: favorited } : i));
-                      }}
-                    />
-                  </Box>
-                  <Typography variant="body2" color="text.secondary" mb={1}>{item.description}</Typography>
-                  <Box display="flex" alignItems="center" gap={1} mb={1}>
-                    <Chip label={item.itemStatus} color={
-                      item.itemStatus === 'ACTIVE' ? 'success' :
+                    }}
+                  />
+                </Box>
+                <Typography variant="body2" color="text.secondary" mb={1}>{item.description}</Typography>
+                <Box display="flex" alignItems="center" gap={1} mb={1}>
+                  <Chip label={item.itemStatus} color={
+                    item.itemStatus === 'ACTIVE' ? 'success' :
                       item.itemStatus === 'DRAFT' ? 'warning' :
                       item.itemStatus === 'ENDED' ? 'error' :
                       item.itemStatus === 'SOLD' ? 'info' : 'default'
-                    } size="small" />
-                    <Typography variant="body2" color="text.secondary">Starting at <b>${item.startingPrice}</b></Typography>
-                  </Box>
+                  } size="small" />
+                  <Typography variant="body2" color="text.secondary">Starting at <b>${item.startingPrice}</b></Typography>
+                </Box>
                   <Box display="flex" alignItems="center" gap={1} mb={1}>
                     <AccessTimeIcon fontSize="small" color="action" />
                     <Typography variant="caption" color="text.secondary">
@@ -281,24 +281,24 @@ const Items = () => {
                       {item.bidsCount || 0} bids
                     </Typography>
                   </Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Category: {categories.find(c => c.id === item.categoryId)?.name || 'N/A'}
-                  </Typography>
-                </CardContent>
-                <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    size="small"
-                    startIcon={<GavelIcon />}
-                    href={`/items/${item.id}`}
-                    sx={{ borderRadius: 2 }}
-                  >
-                    {item.itemStatus === 'ACTIVE' ? 'Bid Now' : 'View'}
-                  </Button>
-                </CardActions>
-              </Card>
-            </Grid>
+                <Typography variant="caption" color="text.secondary">
+                  Category: {categories.find(c => c.id === item.categoryId)?.name || 'N/A'}
+                </Typography>
+              </CardContent>
+              <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  startIcon={<GavelIcon />}
+                  href={`/items/${item.id}`}
+                  sx={{ borderRadius: 2 }}
+                >
+                  {item.itemStatus === 'ACTIVE' ? 'Bid Now' : 'View'}
+                </Button>
+              </CardActions>
+            </Card>
+          </Grid>
           ))
         )}
       </Grid>

@@ -4,10 +4,10 @@ import com.auction.dto.AdminRegisterRequest;
 import com.auction.dto.RegisterRequest;
 import com.auction.exception.ResourceNotFoundException;
 import com.auction.model.User;
-import com.auction.model.UserRole;
+import com.auction.model.Role;
 import com.auction.repository.UserRepository;
 import com.auction.validation.PasswordValidator;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,19 +16,17 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Transactional
 public class UserService {
 
-    private final UserRepository userRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
-    private final PasswordValidator passwordValidator;
-    private final PasswordEncoder springPasswordEncoder;
+    @Autowired
+    private UserRepository userRepository;
 
-    public UserService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, PasswordValidator passwordValidator, PasswordEncoder springPasswordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.passwordValidator = passwordValidator;
-        this.springPasswordEncoder = springPasswordEncoder;
-    }
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private PasswordValidator passwordValidator;
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -58,7 +56,7 @@ public class UserService {
         admin.setEmail(request.getEmail());
         admin.setUsername(generateUsername(request.getEmail()));
         admin.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        admin.setRole(User.Role.ADMIN);
+        admin.setRole(Role.ADMIN);
         admin.setUserStatus(User.UserStatus.PENDING);
         admin.setRegistrationDate(LocalDateTime.now());
         
@@ -70,7 +68,7 @@ public class UserService {
         User admin = userRepository.findByEmail(email)
             .orElseThrow(() -> new ResourceNotFoundException("Admin not found with email: " + email));
             
-        if (admin.getRole() != User.Role.ADMIN) {
+        if (admin.getRole() != Role.ADMIN) {
             throw new IllegalArgumentException("User is not an admin");
         }
         
@@ -109,7 +107,7 @@ public class UserService {
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setUsername(request.getUsername());
-        user.setRole(User.Role.USER);
+        user.setRole(Role.USER);
         
         return userRepository.save(user);
     }
@@ -167,5 +165,9 @@ public class UserService {
     public User findById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    public User save(User user) {
+        return userRepository.save(user);
     }
 }

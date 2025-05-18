@@ -69,9 +69,9 @@ const AdminDashboard = () => {
               {card.key === 'totalBids' && bidsStats.totalBids}
               {card.key === 'revenue' && `$${revenue.toLocaleString()}`}
               {card.key === 'activeAuctions' && bidsStats.activeAuctions}
-            </div>
+        </div>
             <div className="text-gray-600">{card.name}</div>
-          </div>
+        </div>
         ))}
       </div>
 

@@ -3,6 +3,7 @@ package com.auction.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -32,15 +33,18 @@ public class User implements UserDetails {
     private Long userId;
 
     @NotBlank
+    @Size(max = 50)
     @Column(unique = true, nullable = false)
     private String username;
 
     @NotBlank
+    @Size(max = 100)
     @Email
     @Column(unique = true, nullable = false)
     private String email;
 
     @NotBlank
+    @Size(max = 120)
     @Column(nullable = false)
     private String passwordHash;
 
@@ -50,7 +54,7 @@ public class User implements UserDetails {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role;
+    private Role role = Role.USER;
 
     @Column(nullable = false)
     private LocalDateTime registrationDate;
@@ -63,6 +67,16 @@ public class User implements UserDetails {
 
     @OneToMany(mappedBy = "winner", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AuctionResult> wonAuctions = new ArrayList<>();
+
+    @Column(name = "enabled", nullable = false)
+    private boolean enabled = true;
+
+    // 2FA fields
+    @Column(name = "two_factor_secret")
+    private String twoFactorSecret;
+    
+    @Column(name = "two_factor_enabled")
+    private Boolean twoFactorEnabled = false;
 
     public User() {}
 
@@ -100,6 +114,12 @@ public class User implements UserDetails {
     public List<AuctionResult> getWonAuctions() { return wonAuctions; }
     public void setWonAuctions(List<AuctionResult> wonAuctions) { this.wonAuctions = wonAuctions; }
 
+    public String getTwoFactorSecret() { return twoFactorSecret; }
+    public void setTwoFactorSecret(String twoFactorSecret) { this.twoFactorSecret = twoFactorSecret; }
+
+    public Boolean isTwoFactorEnabled() { return twoFactorEnabled; }
+    public void setTwoFactorEnabled(Boolean twoFactorEnabled) { this.twoFactorEnabled = twoFactorEnabled; }
+
     @PrePersist
     protected void onCreate() {
         registrationDate = LocalDateTime.now();
@@ -109,11 +129,14 @@ public class User implements UserDetails {
         if (role == null) {
             role = Role.USER;
         }
+        if (twoFactorEnabled == null) {
+            twoFactorEnabled = false;
+        }
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.name()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role));
     }
 
     @Override
@@ -123,7 +146,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonExpired() {
-        return true;
+        return enabled && userStatus == UserStatus.ACTIVE;
     }
 
     @Override
@@ -138,17 +161,12 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return userStatus == UserStatus.ACTIVE;
+        return enabled && userStatus == UserStatus.ACTIVE;
     }
 
     public enum UserStatus {
         PENDING,
         ACTIVE,
         SUSPENDED
-    }
-
-    public enum Role {
-        USER,
-        ADMIN
     }
 }

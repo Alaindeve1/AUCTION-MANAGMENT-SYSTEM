@@ -2,11 +2,12 @@ package com.auction.controller;
 
 import com.auction.dto.AdminLoginRequest;
 import com.auction.model.User;
+import com.auction.model.Role;
 import com.auction.repository.UserRepository;
 import com.auction.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -21,7 +22,7 @@ public class AdminAuthController {
     private UserRepository userRepository;
     
     @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
+    private PasswordEncoder passwordEncoder;
     
     @Autowired
     private JwtService jwtService;
@@ -35,7 +36,7 @@ public class AdminAuthController {
             return ResponseEntity.badRequest().body("Invalid credentials");
         }
 
-        if (admin.getRole() != User.Role.ADMIN) {
+        if (admin.getRole() != null && admin.getRole().equals(Role.ADMIN)) {
             return ResponseEntity.badRequest().body("User is not an admin");
         }
 
@@ -60,7 +61,7 @@ public class AdminAuthController {
         User admin = userRepository.findByEmail(email)
                 .orElse(null);
 
-        if (admin == null || admin.getRole() != User.Role.ADMIN) {
+        if (admin == null || admin.getRole() != null && admin.getRole().equals(Role.ADMIN)) {
             return ResponseEntity.badRequest().body("Invalid admin token");
         }
 

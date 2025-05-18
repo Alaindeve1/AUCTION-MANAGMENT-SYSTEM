@@ -42,14 +42,14 @@ const UserNotifications = () => {
       ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
       setNotifications(allNotifications);
-      setError(null);
+        setError(null);
     } catch (error) {
       console.error('Error fetching notifications:', error);
       setError('Failed to load notifications');
       toast.error('Failed to load notifications');
     }
     setLoading(false);
-  };
+};
 
   return (
     <Box p={3}>
