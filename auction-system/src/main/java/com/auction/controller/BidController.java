@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/bids")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"})
 public class BidController {
 
     private final BidService bidService;

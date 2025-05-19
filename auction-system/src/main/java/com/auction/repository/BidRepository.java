@@ -3,6 +3,7 @@ package com.auction.repository;
 import com.auction.model.Bid;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -29,4 +30,7 @@ public interface BidRepository extends JpaRepository<Bid, Long> {
 
     @Query("SELECT COUNT(DISTINCT b.bidder.userId) FROM Bid b")
     long countUniqueBidders();
+
+    @Query("SELECT MAX(b.itemBidId) FROM Bid b WHERE b.item.itemId = :itemId")
+    Long findMaxItemBidIdByItemId(@Param("itemId") Long itemId);
 }

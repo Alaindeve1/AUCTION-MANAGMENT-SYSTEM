@@ -17,12 +17,10 @@ import { Gavel as GavelIcon } from '@mui/icons-material';
 import { format } from 'date-fns';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
-import { useAuth } from '../../utils/auth';
 
 const ItemDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
   const [item, setItem] = useState(null);
   const [bids, setBids] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,66 +28,35 @@ const ItemDetails = () => {
   const [placingBid, setPlacingBid] = useState(false);
 
   useEffect(() => {
-    console.log('ItemDetails mounted with ID:', id);
-    console.log('Auth state:', { isAuthenticated, user });
-    
-    if (!isAuthenticated) {
-      console.log('User not authenticated, redirecting to login');
-      toast.error('Please log in to view item details');
-      navigate('/login');
-      return;
-    }
-
     if (!id) {
-      console.log('No item ID provided');
       toast.error('Invalid item ID');
       navigate('/items');
       return;
     }
 
     fetchItemDetails();
-  }, [id, isAuthenticated, user]);
+  }, [id]);
 
   const fetchItemDetails = async () => {
-    if (!id) {
-      console.log('No item ID in fetchItemDetails');
-      return;
-    }
+    if (!id) return;
 
     try {
       setLoading(true);
-      console.log('Fetching details for item:', id);
-      
-      const [itemResponse, bidsResponse] = await Promise.all([
-        api.get(`/items/${id}`),
-        api.get(`/items/${id}/bids`)
-      ]);
-      
-      console.log('Item response:', itemResponse.data);
-      console.log('Bids response:', bidsResponse.data);
-      
+      const itemResponse = await api.get(`/items/${id}`);
       setItem(itemResponse.data);
-      setBids(bidsResponse.data);
+      setBids([]);
     } catch (error) {
       console.error('Error fetching item details:', error);
-      if (error.response?.status === 401) {
-        console.log('Unauthorized access, redirecting to login');
-        toast.error('Please log in to view item details');
-        navigate('/login');
-      } else {
-        toast.error('Failed to fetch item details');
-        navigate('/items');
-      }
+      toast.error('Failed to fetch item details');
+      navigate('/items');
     } finally {
       setLoading(false);
     }
   };
 
   const handlePlaceBid = async () => {
-    if (!isAuthenticated || !user) {
-      console.log('User not authenticated for placing bid');
-      toast.error('Please log in to place a bid');
-      navigate('/login');
+    if (!id) {
+      toast.error('Invalid item ID');
       return;
     }
 
@@ -101,25 +68,14 @@ const ItemDetails = () => {
 
     try {
       setPlacingBid(true);
-      console.log('Placing bid:', { itemId: id, bidderId: user.id, amount });
-      
-      await api.post('/bids', {
-        itemId: id,
-        bidderId: user.id,
-        bidAmount: amount
-      });
+      await api.post(`/bids?itemId=${id}&bidderId=1&bidAmount=${amount}`);
       
       toast.success('Bid placed successfully!');
       setBidAmount('');
       fetchItemDetails();
     } catch (error) {
       console.error('Error placing bid:', error);
-      if (error.response?.status === 401) {
-        toast.error('Please log in to place a bid');
-        navigate('/login');
-      } else {
-        toast.error(error.response?.data?.message || 'Failed to place bid');
-      }
+      toast.error(error.response?.data?.message || 'Failed to place bid');
     } finally {
       setPlacingBid(false);
     }
@@ -183,7 +139,7 @@ const ItemDetails = () => {
                 <Grid item xs={6}>
                   <Typography variant="body2" color="text.secondary">Current Highest Bid</Typography>
                   <Typography variant="body1">
-                    ${bids.length > 0 ? Math.max(...bids.map(b => b.bidAmount)) : item.startingPrice}
+                    ${item.startingPrice}
                   </Typography>
                 </Grid>
                 <Grid item xs={6}>
@@ -233,22 +189,7 @@ const ItemDetails = () => {
             <Divider sx={{ my: 3 }} />
 
             <Typography variant="h6" gutterBottom>Bid History</Typography>
-            {bids.length === 0 ? (
-              <Typography color="text.secondary">No bids yet</Typography>
-            ) : (
-              <Box>
-                {bids.map((bid) => (
-                  <Box key={bid.bidId} sx={{ mb: 1 }}>
-                    <Typography variant="body2">
-                      {bid.bidderUsername} - ${bid.bidAmount}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {format(new Date(bid.bidTime), 'MMM dd, yyyy HH:mm')}
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
-            )}
+            <Typography color="text.secondary">Bid history is currently unavailable</Typography>
           </Paper>
         </Grid>
       </Grid>

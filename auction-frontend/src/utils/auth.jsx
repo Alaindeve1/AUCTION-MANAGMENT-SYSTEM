@@ -17,14 +17,8 @@ api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
-    console.log('Adding token to request:', config.url);
-  } else {
-    console.log('No token found for request:', config.url);
   }
   return config;
-}, (error) => {
-  console.error('Request interceptor error:', error);
-  return Promise.reject(error);
 });
 
 // Handle 401 responses
@@ -32,12 +26,10 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      console.log('401 error for:', error.config.url);
-      // Only remove token and redirect if it's not a login request
-      if (!error.config.url.includes('/auth/login')) {
-        console.log('Removing token and redirecting to login');
+      // Only redirect to login if it's not already the login page
+      if (!window.location.pathname.includes('/login')) {
         localStorage.removeItem('token');
-        window.location.replace('/login');
+        window.location.href = '/login';
       }
     }
     return Promise.reject(error);
@@ -51,80 +43,70 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const decoded = jwtDecode(token);
-          // Check if token is expired
-          if (decoded.exp * 1000 < Date.now()) {
-            console.log('Token expired, removing');
-            localStorage.removeItem('token');
-            setUser(null);
-          } else {
-            console.log('Setting user from token:', decoded);
-            setUser({
-              id: decoded.id,
-              username: decoded.username,
-              email: decoded.email,
-              role: decoded.role,
-            });
-          }
-        } catch (error) {
-          console.error('Error decoding token:', error);
+    const token = localStorage.getItem('token');
+    if (token) {
+      // Validate token and get user info
+      api.get('/auth/validate', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(response => {
+          setUser({ ...response.data, token });
+        })
+        .catch(() => {
           localStorage.removeItem('token');
           setUser(null);
-        }
-      }
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } else {
       setLoading(false);
-    };
-
-    initializeAuth();
+    }
   }, []);
 
   const login = async (username, password) => {
     try {
-      console.log('Attempting login for:', username);
       const response = await api.post('/auth/login', { username, password });
-      const { token, requires2FA } = response.data;
+      const { token, ...userData } = response.data;
       
-      if (!requires2FA) {
-        console.log('Login successful, setting token');
-        localStorage.setItem('token', token);
-        const decoded = jwtDecode(token);
-        const userData = {
-          id: decoded.id,
-          username: decoded.username,
-          email: decoded.email,
-          role: decoded.role,
-        };
-        setUser(userData);
-        // Return both the user data and 2FA status
-        return { requires2FA, user: userData };
+      if (!token) {
+        throw new Error('No token received from server');
       }
-      
-      return { requires2FA };
+
+      localStorage.setItem('token', token);
+      setUser({ ...userData, token });
+      setError(null);
+      return true;
     } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+      console.error('Login failed:', error);
+      if (error.response?.status === 403) {
+        setError('Not authorized');
+      } else if (error.response?.status === 401) {
+        setError('Invalid credentials');
+      } else {
+        const errorMessage = error.response?.data?.message || error.response?.data || 'Login failed. Please try again.';
+        setError(typeof errorMessage === 'string' ? errorMessage : 'Login failed. Please try again.');
+      }
+      return false;
     }
   };
 
   const logout = () => {
-    console.log('Logging out user');
     localStorage.removeItem('token');
     setUser(null);
-    window.location.replace('/login');
+    window.location.href = '/login';
   };
 
   const value = {
     user,
     loading,
+    error,
     login,
     logout,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -139,10 +121,13 @@ export const useAuth = () => {
   return context;
 };
 
+// Export the api instance for use in other files
+export default api;
+
 // Export individual auth functions
 export const logout = () => {
   localStorage.removeItem('token');
-  window.location.replace('/login');
+  window.location.href = '/login';
 };
 
 export const verify2FA = async (email, code) => {
@@ -187,6 +172,7 @@ export const isAuthenticated = () => {
     const currentTime = Date.now() / 1000;
     return decoded.exp > currentTime;
   } catch (error) {
+    console.error('Error checking authentication:', error);
     return false;
   }
 };
@@ -217,21 +203,24 @@ export const hasPermission = (requiredRole) => {
 };
 
 export const getUserData = () => {
-  const token = getToken();
+  const token = localStorage.getItem('token');
   if (!token) return null;
 
   try {
     const decoded = jwtDecode(token);
-    return {
-      id: decoded.id,
-      username: decoded.username,
-      email: decoded.email,
-      role: decoded.role,
-    };
+    const currentTime = Date.now() / 1000;
+    
+    if (decoded.exp > currentTime) {
+      return {
+        id: decoded.id,
+        username: decoded.username,
+        email: decoded.email,
+        role: decoded.role,
+      };
+    }
+    return null;
   } catch (error) {
+    console.error('Error decoding token:', error);
     return null;
   }
-};
-
-// Export the api instance for use in other files
-export default api; 
+}; 

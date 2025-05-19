@@ -154,13 +154,13 @@ const Items = () => {
     }
   };
 
-  const handleBidClick = (itemId) => {
-    console.log('Bid clicked for item:', itemId);
-    if (!itemId) {
+  const handleBidClick = (item) => {
+    console.log('Bid button clicked, item:', item);
+    if (!item || !item.itemId) {
       toast.error('Invalid item ID');
       return;
     }
-    navigate(`/items/${itemId}`);
+    navigate(`/items/${item.itemId}`);
   };
 
   const columns = [
@@ -224,64 +224,61 @@ const Items = () => {
           <CircularProgress />
         </Box>
       ) : (
-        <Grid container spacing={3}>
-          {items.length === 0 && (
-            <Grid item xs={12}>
-              <Box textAlign="center" py={8}>
-                <Typography color="text.secondary">No items found in this category.</Typography>
-              </Box>
-            </Grid>
-          )}
-          {items.map((item) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={item.id}>
-              <Card sx={{ display: 'flex', flexDirection: 'column', height: '100%', borderRadius: 3, boxShadow: 3 }}>
-                {item.imageUrl && (
-                  <CardMedia
-                    component="img"
-                    height="180"
-                    image={item.imageUrl}
-                    alt={item.title}
-                    sx={{ objectFit: 'cover', borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
-                  />
-                )}
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Box display="flex" alignItems="center" justifyContent="space-between">
-                    <Typography variant="h6" fontWeight={600} gutterBottom>{item.title}</Typography>
-                  </Box>
-                  <Typography variant="body2" color="text.secondary" mb={1}>{item.description}</Typography>
-                  <Box display="flex" alignItems="center" gap={1} mb={1}>
-                    <Chip label={item.itemStatus} color={
-                      item.itemStatus === 'ACTIVE' ? 'success' :
+      <Grid container spacing={3}>
+        {items.length === 0 && (
+          <Grid item xs={12}>
+            <Box textAlign="center" py={8}>
+              <Typography color="text.secondary">No items found in this category.</Typography>
+            </Box>
+          </Grid>
+        )}
+        {items.map((item) => (
+          <Grid item xs={12} sm={6} md={4} lg={3} key={item.id || `item-${item.title}-${item.startingPrice}`}>
+            <Card sx={{ display: 'flex', flexDirection: 'column', height: '100%', borderRadius: 3, boxShadow: 3 }}>
+              {item.imageUrl && (
+                <CardMedia
+                  component="img"
+                  height="180"
+                  image={item.imageUrl}
+                  alt={item.title}
+                  sx={{ objectFit: 'cover', borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
+                />
+              )}
+              <CardContent sx={{ flexGrow: 1 }}>
+                <Box display="flex" alignItems="center" justifyContent="space-between">
+                  <Typography variant="h6" fontWeight={600} gutterBottom>{item.title}</Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary" mb={1}>{item.description}</Typography>
+                <Box display="flex" alignItems="center" gap={1} mb={1}>
+                  <Chip label={item.itemStatus} color={
+                    item.itemStatus === 'ACTIVE' ? 'success' :
                       item.itemStatus === 'ENDED' ? 'warning' :
                       item.itemStatus === 'SOLD' ? 'info' : 'default'
-                    } size="small" />
-                    <Typography variant="body2" color="text.secondary">Starting at <b>${item.startingPrice}</b></Typography>
-                  </Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Category: {categories.find(c => c.id === item.categoryId)?.name || 'N/A'}
-                  </Typography>
-                </CardContent>
-                <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
-                  {item.itemStatus === 'ACTIVE' && (
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      size="small"
-                      startIcon={<GavelIcon />}
-                      onClick={() => {
-                        console.log('Bid button clicked for item:', item);
-                        handleBidClick(item.itemId);
-                      }}
-                      sx={{ borderRadius: 2 }}
-                    >
-                      Bid Now
-                    </Button>
-                  )}
-                </CardActions>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+                  } size="small" />
+                  <Typography variant="body2" color="text.secondary">Starting at <b>${item.startingPrice}</b></Typography>
+                </Box>
+                <Typography variant="caption" color="text.secondary">
+                  Category: {categories.find(c => c.id === item.categoryId)?.name || 'N/A'}
+                </Typography>
+              </CardContent>
+              <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
+                {item.itemStatus === 'ACTIVE' && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    size="small"
+                    startIcon={<GavelIcon />}
+                    onClick={() => handleBidClick(item)}
+                    sx={{ borderRadius: 2 }}
+                  >
+                    Bid Now
+                  </Button>
+                )}
+              </CardActions>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
       )}
       <Box mt={4} display="flex" justifyContent="center">
         <DataTable

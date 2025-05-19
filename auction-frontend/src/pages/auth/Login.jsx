@@ -2,10 +2,9 @@ import { useState } from 'react';
 import { useNavigate, Link as RouterLink, useLocation } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import api from '../../utils/api';
+import { useAuth } from '../../utils/auth';
 import toast from 'react-hot-toast';
 import AuthLayout from '../../components/auth/AuthLayout';
-import { useAuth } from '../../utils/auth';
 
 const validationSchema = Yup.object({
   username: Yup.string()
@@ -17,40 +16,34 @@ const validationSchema = Yup.object({
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
-  const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-  });
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const { login, error: authError } = useAuth();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      console.log('Attempting login...');
-      const { requires2FA, user } = await login(formData.username, formData.password);
-      
-      if (requires2FA) {
-        console.log('2FA required, redirecting to 2FA page');
-        navigate('/verify-2fa', { state: { email: formData.username } });
-      } else {
-        console.log('Login successful, user:', user);
-        // Get the redirect path from location state or default to dashboard
-        const from = location.state?.from?.pathname || '/dashboard';
-        console.log('Redirecting to:', from);
-        navigate(from, { replace: true });
+  const formik = useFormik({
+    initialValues: {
+      username: '',
+      password: '',
+    },
+    validationSchema,
+    onSubmit: async (values) => {
+      try {
+        const success = await login(values.username, values.password);
+        if (success) {
+          toast.success('Login successful!');
+          // Redirect to the attempted URL or dashboard
+          const from = location.state?.from?.pathname || '/dashboard';
+          navigate(from, { replace: true });
+        } else {
+          setError(authError || 'Login failed');
+          toast.error(authError || 'Login failed');
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        setError(error.response?.data?.message || 'Login failed');
+        toast.error(error.response?.data?.message || 'Login failed');
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      setError(error.response?.data?.message || 'Login failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
 
   return (
     <AuthLayout>
@@ -59,13 +52,13 @@ const Login = () => {
         <p className="text-gray-600">Please sign in to your account</p>
       </div>
 
-      {error && (
+      {(error || authError) && (
         <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg animate-fade-in">
-          <p className="text-red-700">{error}</p>
+          <p className="text-red-700">{error || authError}</p>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={formik.handleSubmit} className="space-y-6">
         <div className="space-y-4">
           <div>
             <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
@@ -78,11 +71,16 @@ const Login = () => {
               autoComplete="username"
               required
               className={`w-full px-4 py-2 rounded-lg border ${
-                error ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
+                formik.touched.username && formik.errors.username
+                  ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                  : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
               } focus:outline-none focus:ring-2 transition-colors duration-200`}
-              value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              value={formik.values.username}
+              onChange={formik.handleChange}
             />
+            {formik.touched.username && formik.errors.username && (
+              <p className="mt-1 text-sm text-red-600">{formik.errors.username}</p>
+            )}
           </div>
 
           <div>
@@ -96,11 +94,16 @@ const Login = () => {
               autoComplete="current-password"
               required
               className={`w-full px-4 py-2 rounded-lg border ${
-                error ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
+                formik.touched.password && formik.errors.password
+                  ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                  : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
               } focus:outline-none focus:ring-2 transition-colors duration-200`}
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              value={formik.values.password}
+              onChange={formik.handleChange}
             />
+            {formik.touched.password && formik.errors.password && (
+              <p className="mt-1 text-sm text-red-600">{formik.errors.password}</p>
+            )}
           </div>
         </div>
 
@@ -128,9 +131,8 @@ const Login = () => {
         <button
           type="submit"
           className="w-full bg-primary-600 text-white py-2 px-4 rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors duration-200 transform hover:scale-[1.02]"
-          disabled={loading}
         >
-          {loading ? 'Logging in...' : 'Sign in'}
+          Sign in
         </button>
 
         <div className="text-center">

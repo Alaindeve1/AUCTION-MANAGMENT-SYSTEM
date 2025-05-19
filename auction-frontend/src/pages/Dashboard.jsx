@@ -3,6 +3,7 @@ import { FiAward, FiActivity, FiStar, FiBox, FiBell, FiUser, FiShoppingCart, FiP
 import api from '../utils/api';
 import { useAuth } from '../utils/auth';
 import { Navigate, useLocation } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const StatCard = ({ title, value, icon: Icon, color }) => (
   <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
@@ -26,41 +27,76 @@ const Dashboard = () => {
   const { data: bids = [], isLoading: bidsLoading, error: bidsError } = useQuery({
     queryKey: ['bids', user.id],
     queryFn: async () => {
-      const res = await api.get(`/bids/user/${user.id}`);
-      return res.data;
+      try {
+        const res = await api.get(`/bids/user/${user.id}`);
+        return res.data;
+      } catch (error) {
+        console.error('Error fetching bids:', error);
+        if (error.response?.status === 401) {
+          toast.error('Session expired. Please log in again.');
+        }
+        throw error;
+      }
     },
     enabled: !!user?.id,
-    refetchInterval: 5000,
+    retry: false,
   });
+
   // Wins
   const { data: wins = [], isLoading: winsLoading, error: winsError } = useQuery({
-    queryKey: ['wins', user?.id],
+    queryKey: ['wins', user.id],
     queryFn: async () => {
-      const res = await api.get(`/auction-results/winner/${user.id}`);
-      return res.data;
+      try {
+        const res = await api.get(`/auction-results/winner/${user.id}`);
+        return res.data;
+      } catch (error) {
+        console.error('Error fetching wins:', error);
+        if (error.response?.status === 401) {
+          toast.error('Session expired. Please log in again.');
+        }
+        throw error;
+      }
     },
     enabled: !!user?.id,
-    refetchInterval: 5000,
+    retry: false,
   });
+
   // Favorites
   const { data: favorites = [], isLoading: favLoading, error: favError } = useQuery({
-    queryKey: ['favorites', user?.id],
+    queryKey: ['favorites', user.id],
     queryFn: async () => {
-      const res = await api.get(`/favorites/user/${user.id}`);
-      return res.data;
+      try {
+        const res = await api.get(`/favorites/user/${user.id}`);
+        return res.data;
+      } catch (error) {
+        console.error('Error fetching favorites:', error);
+        if (error.response?.status === 401) {
+          toast.error('Session expired. Please log in again.');
+        }
+        throw error;
+      }
     },
     enabled: !!user?.id,
-    refetchInterval: 5000,
+    retry: false,
   });
+
   // Notifications
   const { data: notifications = [], isLoading: notifLoading, error: notifError } = useQuery({
-    queryKey: ['notifications', user?.id],
+    queryKey: ['notifications', user.id],
     queryFn: async () => {
-      const res = await api.get(`/notifications/user/${user.id}`);
-      return res.data;
+      try {
+        const res = await api.get(`/notifications/user/${user.id}`);
+        return res.data;
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+        if (error.response?.status === 401) {
+          toast.error('Session expired. Please log in again.');
+        }
+        throw error;
+      }
     },
     enabled: !!user?.id,
-    refetchInterval: 5000,
+    retry: false,
   });
 
   const loading = bidsLoading || winsLoading || favLoading || notifLoading;
@@ -75,17 +111,13 @@ const Dashboard = () => {
   }
 
   if (error) {
-    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-      return (
-        <div className="flex flex-col items-center justify-center h-screen">
-          <div className="text-red-600 text-lg font-bold mb-4">Session expired or unauthorized. Please <a href="/login" className="underline">login again</a>.</div>
-        </div>
-      );
+    if (error.response?.status === 401) {
+      return <Navigate to="/login" state={{ from: location }} replace />;
     }
     return (
       <div className="flex flex-col items-center justify-center h-screen">
         <div className="text-red-600 text-lg font-bold mb-4">An error occurred loading your dashboard.</div>
-        <div className="text-gray-500">{error.message || JSON.stringify(error)}</div>
+        <div className="text-gray-500">{error.message}</div>
       </div>
     );
   }
