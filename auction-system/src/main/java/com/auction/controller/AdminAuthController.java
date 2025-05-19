@@ -42,7 +42,7 @@ public class AdminAuthController {
                 return ResponseEntity.status(401).body(error);
             }
             
-            String token = jwtService.generateToken(user.getId(), user.getUsername(), user.getEmail(), user.getRole().name());
+            String token = jwtService.generateToken(user.getUserId(), user.getUsername(), user.getEmail(), user.getRole().name());
             Map<String, Object> response = new HashMap<>();
             response.put("token", token);
             response.put("username", user.getUsername());

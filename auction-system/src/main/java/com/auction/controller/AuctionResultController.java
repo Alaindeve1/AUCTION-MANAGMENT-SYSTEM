@@ -43,7 +43,10 @@ public class AuctionResultController {
     }
 
     @GetMapping("/winner/{winnerId}")
-    public ResponseEntity<List<AuctionResultDTO>> getAuctionResultsByWinner(@PathVariable Long winnerId) {
+    public ResponseEntity<List<AuctionResultDTO>> getAuctionResultsByWinner(@PathVariable(required = false) Long winnerId) {
+        if (winnerId == null) {
+            return ResponseEntity.ok(List.of());
+        }
         List<AuctionResultDTO> results = auctionResultService.getAuctionResultsByWinner(winnerId).stream()
                 .map(auctionResultService::convertToDTO)
                 .collect(Collectors.toList());

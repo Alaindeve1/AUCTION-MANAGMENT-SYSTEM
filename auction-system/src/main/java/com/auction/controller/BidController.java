@@ -78,8 +78,16 @@ public class BidController {
             @RequestParam Long itemId,
             @RequestParam Long bidderId,
             @RequestParam BigDecimal bidAmount) {
-        Bid bid = bidService.placeBid(itemId, bidderId, bidAmount);
-        return new ResponseEntity<>(BidDto.fromEntity(bid), HttpStatus.CREATED);
+        try {
+            Bid bid = bidService.placeBid(itemId, bidderId, bidAmount);
+            return new ResponseEntity<>(BidDto.fromEntity(bid), HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            throw e; // Let the GlobalExceptionHandler handle it
+        } catch (IllegalStateException e) {
+            throw e; // Let the GlobalExceptionHandler handle it
+        } catch (Exception e) {
+            throw new RuntimeException("Error placing bid: " + e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")

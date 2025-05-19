@@ -15,14 +15,12 @@ const navigation = [
   { name: 'Dashboard', to: '/dashboard', icon: FiHome },
   { name: 'Items', to: '/items', icon: FiPackage },
   { name: 'Bids', to: '/bids', icon: FiDollarSign },
-  { name: 'Watchlist', to: '/watchlist', icon: FiGrid },
   { name: 'Wins', to: '/wins', icon: FiAward },
   { name: 'Notifications', to: '/notifications', icon: FiUsers },
   { name: 'Profile', to: '/profile', icon: FiUser },
 ];
 
 const secondaryNavigation = [
-  { name: 'Settings', to: '/settings', icon: FiSettings },
   { name: 'Help & Support', to: '/help', icon: FiHelpCircle },
 ];
 

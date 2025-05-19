@@ -19,6 +19,7 @@ import { format } from 'date-fns';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../utils/auth';
+import { jwtDecode } from 'jwt-decode';
 
 const Bids = () => {
   const [bids, setBids] = useState([]);
@@ -26,27 +27,28 @@ const Bids = () => {
   const { user } = useAuth();
 
   const fetchUserBids = async () => {
-    console.log('Current user:', user); // Debug log
-    
-    if (!user?.id) {
-      console.log('No user ID found, skipping fetch'); // Debug log
-    setLoading(false);
+    if (!user) {
+      setLoading(false);
       return;
     }
-    
+
     try {
       setLoading(true);
-      console.log('Fetching bids for user:', user.id); // Debug log
-      const response = await api.get(`/bids/user/${user.id}`);
-      console.log('User bids response:', response.data);
+      // Decode the JWT token to get the user ID
+      const decodedToken = jwtDecode(user.token);
+      const userId = decodedToken.id;
+
+      if (!userId) {
+        toast.error('Unable to get user ID');
+        return;
+      }
+
+      console.log('Fetching bids for user ID:', userId); // Debug log
+      const response = await api.get(`/bids/user/${userId}`);
+      console.log('Bids response:', response.data); // Debug log
       setBids(response.data);
     } catch (error) {
       console.error('Error fetching user bids:', error);
-      console.error('Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
       toast.error('Failed to fetch your bids');
     } finally {
       setLoading(false);
@@ -54,12 +56,8 @@ const Bids = () => {
   };
 
   useEffect(() => {
-    console.log('useEffect triggered, user:', user); // Debug log
     fetchUserBids();
-  }, [user?.id]);
-
-  // Debug log for render
-  console.log('Render state:', { loading, bidsCount: bids.length, userId: user?.id });
+  }, [user]);
 
   if (loading) {
     return (
@@ -73,7 +71,7 @@ const Bids = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
         <Typography variant="h4" fontWeight={700} color="primary.main">My Bids</Typography>
-        </Box>
+      </Box>
 
       <TableContainer component={Paper} sx={{ mt: 2 }}>
         <Table>
@@ -104,7 +102,7 @@ const Bids = () => {
                     <Chip
                       label={bid.isWinningBid ? 'Winning' : 'Outbid'}
                       color={bid.isWinningBid ? 'success' : 'default'}
-                    size="small"
+                      size="small"
                     />
                   </TableCell>
                 </TableRow>

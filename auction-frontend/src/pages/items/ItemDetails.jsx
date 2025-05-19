@@ -17,10 +17,13 @@ import { Gavel as GavelIcon } from '@mui/icons-material';
 import { format } from 'date-fns';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../utils/auth';
+import { jwtDecode } from 'jwt-decode';
 
 const ItemDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [item, setItem] = useState(null);
   const [bids, setBids] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -60,6 +63,20 @@ const ItemDetails = () => {
       return;
     }
 
+    if (!user) {
+      toast.error('Please log in to place a bid');
+      return;
+    }
+
+    // Decode the JWT token to get the user ID
+    const decodedToken = jwtDecode(user.token);
+    const userId = decodedToken.id;
+
+    if (!userId) {
+      toast.error('Unable to get user ID');
+      return;
+    }
+
     const amount = parseFloat(bidAmount);
     if (!amount || amount <= 0) {
       toast.error('Please enter a valid bid amount');
@@ -68,7 +85,7 @@ const ItemDetails = () => {
 
     try {
       setPlacingBid(true);
-      await api.post(`/bids?itemId=${id}&bidderId=1&bidAmount=${amount}`);
+      await api.post(`/bids?itemId=${id}&bidderId=${userId}&bidAmount=${amount}`);
       
       toast.success('Bid placed successfully!');
       setBidAmount('');

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { FiAward, FiActivity, FiStar, FiBox, FiBell, FiUser, FiShoppingCart, FiPlus } from 'react-icons/fi';
+import { FiAward, FiShoppingCart, FiUser } from 'react-icons/fi';
 import api from '../utils/api';
 import { useAuth } from '../utils/auth';
 import { Navigate, useLocation } from 'react-router-dom';
@@ -23,22 +23,21 @@ const Dashboard = () => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Bids
-  const { data: bids = [], isLoading: bidsLoading, error: bidsError } = useQuery({
-    queryKey: ['bids', user.id],
+  // Active Auctions
+  const { data: activeAuctions = [], isLoading: auctionsLoading, error: auctionsError } = useQuery({
+    queryKey: ['activeAuctions'],
     queryFn: async () => {
       try {
-        const res = await api.get(`/bids/user/${user.id}`);
+        const res = await api.get('/items/status/ACTIVE');
         return res.data;
       } catch (error) {
-        console.error('Error fetching bids:', error);
+        console.error('Error fetching active auctions:', error);
         if (error.response?.status === 401) {
           toast.error('Session expired. Please log in again.');
         }
         throw error;
       }
     },
-    enabled: !!user?.id,
     retry: false,
   });
 
@@ -61,46 +60,8 @@ const Dashboard = () => {
     retry: false,
   });
 
-  // Favorites
-  const { data: favorites = [], isLoading: favLoading, error: favError } = useQuery({
-    queryKey: ['favorites', user.id],
-    queryFn: async () => {
-      try {
-        const res = await api.get(`/favorites/user/${user.id}`);
-        return res.data;
-      } catch (error) {
-        console.error('Error fetching favorites:', error);
-        if (error.response?.status === 401) {
-          toast.error('Session expired. Please log in again.');
-        }
-        throw error;
-      }
-    },
-    enabled: !!user?.id,
-    retry: false,
-  });
-
-  // Notifications
-  const { data: notifications = [], isLoading: notifLoading, error: notifError } = useQuery({
-    queryKey: ['notifications', user.id],
-    queryFn: async () => {
-      try {
-        const res = await api.get(`/notifications/user/${user.id}`);
-        return res.data;
-      } catch (error) {
-        console.error('Error fetching notifications:', error);
-        if (error.response?.status === 401) {
-          toast.error('Session expired. Please log in again.');
-        }
-        throw error;
-      }
-    },
-    enabled: !!user?.id,
-    retry: false,
-  });
-
-  const loading = bidsLoading || winsLoading || favLoading || notifLoading;
-  const error = bidsError || winsError || favError || notifError;
+  const loading = auctionsLoading || winsLoading;
+  const error = auctionsError || winsError;
 
   if (loading) {
     return (
@@ -137,74 +98,51 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard title="My Active Bids" value={bids.length} icon={FiActivity} color="text-blue-500" />
-        <StatCard title="Auctions Won" value={wins.length} icon={FiAward} color="text-green-500" />
-        <StatCard title="Favorites" value={favorites.length || '--'} icon={FiStar} color="text-yellow-500" />
+      <div className="mb-8">
+        <StatCard title="Active Auctions" value={activeAuctions.length} icon={FiShoppingCart} color="text-blue-500" />
       </div>
 
-      {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white rounded-xl shadow p-6">
-          <div className="font-semibold text-lg text-gray-700 mb-4 flex items-center"><FiActivity className="mr-2"/> Recent Bids</div>
-          <ul className="divide-y divide-gray-100">
-            {bids.length === 0 && <li className="text-gray-400">No recent bids.</li>}
-            {bids.slice(-5).reverse().map(bid => (
-              <li key={bid.bidId} className="py-2 flex flex-col">
-                <span className="text-gray-900 font-medium">{bid.itemTitle || bid.itemId}</span>
-                <span className="text-xs text-gray-500">Amount: ${bid.bidAmount} &bull; Status: {bid.status || '-'}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="bg-white rounded-xl shadow p-6">
-          <div className="font-semibold text-lg text-gray-700 mb-4 flex items-center"><FiAward className="mr-2"/> Auctions Won</div>
-          <ul className="divide-y divide-gray-100">
-            {wins.length === 0 && <li className="text-gray-400">No auctions won yet.</li>}
-            {wins.slice(-5).reverse().map(win => (
-              <li key={win.resultId} className="py-2 flex flex-col">
-                <span className="text-gray-900 font-medium">{win.itemTitle || win.itemId}</span>
-                <span className="text-xs text-gray-500">Final Price: ${win.finalPrice} &bull; {win.endDate ? new Date(win.endDate).toLocaleDateString() : '-'}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-
-      {/* Notifications */}
-      <div className="bg-gradient-to-br from-indigo-100 to-indigo-300 rounded-xl shadow p-6 flex flex-col mb-8">
-        <div className="flex items-center mb-4">
-          <FiBell className="w-6 h-6 text-indigo-600 mr-2" />
-          <span className="font-semibold text-lg text-indigo-800">Notifications</span>
-        </div>
-        <ul className="space-y-2">
-          {notifications.length === 0 && <li className="text-gray-500">No notifications yet.</li>}
-          {notifications.slice(-5).reverse().map(n => (
-            <li key={n.id} className={`rounded-lg px-4 py-2 flex items-center gap-2 ${n.read ? 'bg-white text-gray-500' : 'bg-indigo-200 text-indigo-800 font-semibold animate-pulse'}`}>
-              <FiBell className="w-5 h-5" />
-              <span>{n.message}</span>
-              <span className="ml-auto text-xs text-gray-400">{new Date(n.createdAt).toLocaleString()}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Favorites */}
+      {/* Active Auctions */}
       <div className="bg-white rounded-xl shadow p-6 mb-8">
-        <div className="font-semibold text-lg text-gray-700 mb-4 flex items-center"><FiStar className="mr-2"/> Favorites</div>
-        <ul className="divide-y divide-gray-100">
-          {favorites.length === 0 && <li className="text-gray-400">No favorites yet.</li>}
-          {favorites.slice(-5).reverse().map(fav => (
-            <li key={fav.id} className="py-2 flex items-center gap-3">
-              {fav.itemImageUrl && <img src={fav.itemImageUrl} alt={fav.itemTitle} className="w-10 h-10 rounded object-cover border" />}
-              <div className="flex flex-col flex-1">
-                <span className="text-gray-900 font-medium">{fav.itemTitle}</span>
-                <span className="text-xs text-gray-500">Added: {fav.createdAt ? new Date(fav.createdAt).toLocaleDateString() : '-'}</span>
+        <div className="font-semibold text-lg text-gray-700 mb-4 flex items-center"><FiShoppingCart className="mr-2"/> Active Auctions</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {activeAuctions.length === 0 ? (
+            <div className="col-span-full text-center text-gray-500 py-4">No active auctions at the moment.</div>
+          ) : (
+            activeAuctions.slice(0, 6).map(auction => (
+              <div key={auction.itemId} className="border rounded-lg p-4 hover:shadow-md transition">
+                {auction.imageUrl && (
+                  <img src={auction.imageUrl} alt={auction.title} className="w-full h-40 object-cover rounded-lg mb-3" />
+                )}
+                <h3 className="font-semibold text-gray-900 mb-1">{auction.title}</h3>
+                <p className="text-sm text-gray-500 mb-2">Starting at ${auction.startingPrice}</p>
+                <a href={`/items/${auction.itemId}`} className="text-indigo-600 hover:text-indigo-800 text-sm font-medium">View Details →</a>
               </div>
-              {/* No direct itemId in DTO, so no link unless you add it */}
-            </li>
-          ))}
-        </ul>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Auctions Won */}
+      <div className="bg-white rounded-xl shadow p-6">
+        <div className="font-semibold text-lg text-gray-700 mb-4 flex items-center"><FiAward className="mr-2"/> Auctions Won</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {wins.length === 0 ? (
+            <div className="col-span-full text-center text-gray-500 py-4">No auctions won yet.</div>
+          ) : (
+            wins.map(win => (
+              <div key={win.resultId} className="border rounded-lg p-4 hover:shadow-md transition">
+                {win.itemImageUrl && (
+                  <img src={win.itemImageUrl} alt={win.itemTitle} className="w-full h-40 object-cover rounded-lg mb-3" />
+                )}
+                <h3 className="font-semibold text-gray-900 mb-1">{win.itemTitle}</h3>
+                <p className="text-sm text-gray-500 mb-2">Final Price: ${win.finalPrice}</p>
+                <p className="text-xs text-gray-400 mb-2">Ended: {win.endDate ? new Date(win.endDate).toLocaleDateString() : '-'}</p>
+                <a href={`/items/${win.itemId}`} className="text-indigo-600 hover:text-indigo-800 text-sm font-medium">View Details →</a>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );

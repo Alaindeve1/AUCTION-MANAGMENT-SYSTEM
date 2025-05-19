@@ -60,8 +60,8 @@ public class BidDto {
     private static Boolean determineIfWinningBid(Bid bid) {
         Item item = bid.getItem();
 
-        // If auction is still active, no winning bid yet
-        if (item.getEndDate().isAfter(LocalDateTime.now())) {
+        // If auction is still active (no end date or end date is in future), no winning bid yet
+        if (item.getEndDate() == null || item.getEndDate().isAfter(LocalDateTime.now())) {
             return false;
         }
 

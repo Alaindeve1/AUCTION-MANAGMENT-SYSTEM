@@ -26,7 +26,6 @@ import Dashboard from './pages/Dashboard.jsx';
 import Items from './pages/items/Items';
 import ItemDetails from './pages/items/ItemDetails';
 import Bids from './pages/Bids';
-import Watchlist from './pages/Watchlist';
 import Wins from './pages/Wins';
 import Notification from './pages/Notification';
 import SearchResults from './pages/SearchResults';
@@ -61,10 +60,8 @@ const router = createBrowserRouter(
         <Route path="/items" element={<Items />} />
         <Route path="/items/:id" element={<ItemDetails />} />
         <Route path="/bids" element={<Bids />} />
-        <Route path="/watchlist" element={<Watchlist />} />
         <Route path="/wins" element={<Wins />} />
         <Route path="/notifications" element={<Notification />} />
-        <Route path="/settings" element={<div>Settings Content</div>} />
         <Route path="/help" element={<div>Help Content</div>} />
       </Route>
 

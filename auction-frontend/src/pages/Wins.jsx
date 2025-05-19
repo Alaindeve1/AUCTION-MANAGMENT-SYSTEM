@@ -9,7 +9,8 @@ import {
   Button,
   Chip,
   CircularProgress,
-  Fade
+  Fade,
+  Alert
 } from '@mui/material';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import api from '../utils/api';
@@ -17,6 +18,7 @@ import api from '../utils/api';
 const Wins = () => {
   const [wins, setWins] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchWins();
@@ -24,12 +26,17 @@ const Wins = () => {
 
   const fetchWins = async () => {
     setLoading(true);
+    setError(null);
     try {
-      // Replace with actual logged-in user ID
-      const userId = localStorage.getItem('userId') || 1;
+      // Get userId from localStorage or use a default value
+      const userId = localStorage.getItem('userId') || '1';
+      console.log('Fetching wins for user:', userId);
       const res = await api.get(`/auction-results/winner/${userId}`);
+      console.log('Wins response:', res.data);
       setWins(res.data || []);
     } catch (err) {
+      console.error('Error fetching wins:', err);
+      setError('Failed to load your wins. Please try again later.');
       setWins([]);
     }
     setLoading(false);
@@ -40,13 +47,20 @@ const Wins = () => {
       <Fade in timeout={800}>
         <Box>
           <Typography variant="h4" fontWeight={700} mb={1} color="success.main">
-            Congratulations!
+            Your Auction Wins
           </Typography>
           <Typography variant="h6" color="text.secondary" mb={4}>
             "These are the auctions you've conquered. Claim your treasures!"
           </Typography>
         </Box>
       </Fade>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+
       {loading ? (
         <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
           <CircularProgress />
@@ -60,6 +74,9 @@ const Wins = () => {
           <Typography color="text.secondary" mb={2}>
             Your victories will appear here when you win an auction.
           </Typography>
+          <Button variant="contained" color="primary" href="/items">
+            Browse Active Auctions
+          </Button>
         </Box>
       ) : (
         <Grid container spacing={3}>
@@ -73,12 +90,23 @@ const Wins = () => {
                       Final Price: <b>${win.finalPrice?.toFixed(2) || '0.00'}</b>
                     </Typography>
                     <Typography color="text.secondary" mb={1}>
-                      Ended: {win.endDate ? new Date(win.endDate).toLocaleString() : ''}
+                      Ended: {win.endDate ? new Date(win.endDate).toLocaleString() : 'N/A'}
                     </Typography>
-                    <Chip label={win.resultStatus} color={win.resultStatus==="COMPLETED"?"success":"warning"} size="small" />
+                    <Chip 
+                      label={win.resultStatus} 
+                      color={win.resultStatus === "COMPLETED" ? "success" : "warning"} 
+                      size="small" 
+                    />
                   </CardContent>
                   <CardActions>
-                    <Button variant="contained" color="primary">View Item</Button>
+                    <Button 
+                      variant="contained" 
+                      color="primary" 
+                      href={`/items/${win.itemId}`}
+                      fullWidth
+                    >
+                      View Item Details
+                    </Button>
                   </CardActions>
                 </Card>
               </Fade>
