@@ -17,9 +17,32 @@ api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+    console.log('Adding token to request:', config.url);
+  } else {
+    console.log('No token found for request:', config.url);
   }
   return config;
+}, (error) => {
+  console.error('Request interceptor error:', error);
+  return Promise.reject(error);
 });
+
+// Handle 401 responses
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      console.log('401 error for:', error.config.url);
+      // Only remove token and redirect if it's not a login request
+      if (!error.config.url.includes('/auth/login')) {
+        console.log('Removing token and redirecting to login');
+        localStorage.removeItem('token');
+        window.location.replace('/login');
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Create Auth Context
 const AuthContext = createContext(null);
@@ -30,45 +53,70 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
+    const initializeAuth = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const decoded = jwtDecode(token);
+          // Check if token is expired
+          if (decoded.exp * 1000 < Date.now()) {
+            console.log('Token expired, removing');
+            localStorage.removeItem('token');
+            setUser(null);
+          } else {
+            console.log('Setting user from token:', decoded);
+            setUser({
+              id: decoded.id,
+              username: decoded.username,
+              email: decoded.email,
+              role: decoded.role,
+            });
+          }
+        } catch (error) {
+          console.error('Error decoding token:', error);
+          localStorage.removeItem('token');
+          setUser(null);
+        }
+      }
+      setLoading(false);
+    };
+
+    initializeAuth();
+  }, []);
+
+  const login = async (username, password) => {
+    try {
+      console.log('Attempting login for:', username);
+      const response = await api.post('/auth/login', { username, password });
+      const { token, requires2FA } = response.data;
+      
+      if (!requires2FA) {
+        console.log('Login successful, setting token');
+        localStorage.setItem('token', token);
         const decoded = jwtDecode(token);
-        setUser({
+        const userData = {
           id: decoded.id,
           username: decoded.username,
           email: decoded.email,
           role: decoded.role,
-        });
-      } catch (error) {
-        localStorage.removeItem('token');
+        };
+        setUser(userData);
+        // Return both the user data and 2FA status
+        return { requires2FA, user: userData };
       }
+      
+      return { requires2FA };
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     }
-    setLoading(false);
-  }, []);
-
-  const login = async (username, password) => {
-    const response = await api.post('/auth/login', { username, password });
-    const { token, requires2FA } = response.data;
-    
-    if (!requires2FA) {
-      localStorage.setItem('token', token);
-      const decoded = jwtDecode(token);
-      setUser({
-        id: decoded.id,
-        username: decoded.username,
-        email: decoded.email,
-        role: decoded.role,
-      });
-    }
-    
-    return { requires2FA };
   };
 
   const logout = () => {
+    console.log('Logging out user');
     localStorage.removeItem('token');
     setUser(null);
-    window.location.href = '/login';
+    window.location.replace('/login');
   };
 
   const value = {
@@ -94,7 +142,7 @@ export const useAuth = () => {
 // Export individual auth functions
 export const logout = () => {
   localStorage.removeItem('token');
-  window.location.href = '/login';
+  window.location.replace('/login');
 };
 
 export const verify2FA = async (email, code) => {

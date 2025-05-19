@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import FavoriteButton from '../../components/FavoriteButton';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -18,7 +18,8 @@ import {
   CardContent,
   CardMedia,
   CardActions,
-  Chip
+  Chip,
+  CircularProgress
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Gavel as GavelIcon } from '@mui/icons-material';
 import { useFormik } from 'formik';
@@ -45,7 +46,9 @@ const Items = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusTab, setStatusTab] = useState('ACTIVE'); // ACTIVE, PENDING, COMPLETED
+  const [statusTab, setStatusTab] = useState('ACTIVE'); // ACTIVE, ENDED, SOLD
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const formik = useFormik({
     initialValues: {
@@ -74,27 +77,41 @@ const Items = () => {
 
   const fetchItems = async () => {
     try {
-      const response = await api.get('/items', {
-        params: {
-          page: page + 1,
-          size: rowsPerPage,
-          search: searchTerm,
-        },
-      });
-      // Filter on frontend
-      const filtered = (response.data.content || []).filter(item => item.itemStatus !== 'DRAFT' && item.itemStatus === statusTab);
-      setItems(filtered);
-      setTotalCount(filtered.length);
+      setLoading(true);
+      console.log('Fetching items with status:', statusTab);
+
+      const response = await api.get(`/items/status/${statusTab}`);
+      console.log('API Response:', response.data);
+
+      // Handle both paginated and non-paginated responses
+      let itemsData;
+      if (Array.isArray(response.data)) {
+        itemsData = response.data;
+      } else if (response.data.content) {
+        itemsData = response.data.content;
+      } else {
+        itemsData = [];
+      }
+
+      console.log('Items data:', itemsData);
+      
+      setItems(itemsData);
+      setTotalCount(itemsData.length);
     } catch (error) {
+      console.error('Error fetching items:', error);
       toast.error('Failed to fetch items');
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchCategories = async () => {
     try {
       const response = await api.get('/categories');
+      console.log('Categories response:', response.data);
       setCategories(response.data);
     } catch (error) {
+      console.error('Error fetching categories:', error);
       toast.error('Failed to fetch categories');
     }
   };
@@ -135,6 +152,15 @@ const Items = () => {
         toast.error('Failed to delete item');
       }
     }
+  };
+
+  const handleBidClick = (itemId) => {
+    console.log('Bid clicked for item:', itemId);
+    if (!itemId) {
+      toast.error('Invalid item ID');
+      return;
+    }
+    navigate(`/items/${itemId}`);
   };
 
   const columns = [
@@ -190,69 +216,73 @@ const Items = () => {
         sx={{ mb: 3 }}
       >
         <Tab label="Active" value="ACTIVE" />
-        <Tab label="Pending" value="PENDING" />
-        <Tab label="Completed" value="COMPLETED" />
+        <Tab label="Ended" value="ENDED" />
+        <Tab label="Sold" value="SOLD" />
       </Tabs>
-      <Grid container spacing={3}>
-        {items.length === 0 && (
-          <Grid item xs={12}>
-            <Box textAlign="center" py={8}>
-              <Typography color="text.secondary">No items found in this category.</Typography>
-            </Box>
-          </Grid>
-        )}
-        {items.map((item) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={item.id}>
-            <Card sx={{ display: 'flex', flexDirection: 'column', height: '100%', borderRadius: 3, boxShadow: 3 }}>
-              {item.imageUrl && (
-                <CardMedia
-                  component="img"
-                  height="180"
-                  image={item.imageUrl}
-                  alt={item.title}
-                  sx={{ objectFit: 'cover', borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
-                />
-              )}
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Box display="flex" alignItems="center" justifyContent="space-between">
-                  <Typography variant="h6" fontWeight={600} gutterBottom>{item.title}</Typography>
-                  <FavoriteButton
-                    itemId={item.id}
-                    initialFavorite={!!item.isFavorite}
-                    onChange={favorited => {
-                      setItems(prev => prev.map(i => i.id === item.id ? { ...i, isFavorite: favorited } : i));
-                    }}
+      {loading ? (
+        <Box display="flex" justifyContent="center" alignItems="center" height="200px">
+          <CircularProgress />
+        </Box>
+      ) : (
+        <Grid container spacing={3}>
+          {items.length === 0 && (
+            <Grid item xs={12}>
+              <Box textAlign="center" py={8}>
+                <Typography color="text.secondary">No items found in this category.</Typography>
+              </Box>
+            </Grid>
+          )}
+          {items.map((item) => (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={item.id}>
+              <Card sx={{ display: 'flex', flexDirection: 'column', height: '100%', borderRadius: 3, boxShadow: 3 }}>
+                {item.imageUrl && (
+                  <CardMedia
+                    component="img"
+                    height="180"
+                    image={item.imageUrl}
+                    alt={item.title}
+                    sx={{ objectFit: 'cover', borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
                   />
-                </Box>
-                <Typography variant="body2" color="text.secondary" mb={1}>{item.description}</Typography>
-                <Box display="flex" alignItems="center" gap={1} mb={1}>
-                  <Chip label={item.itemStatus} color={
-                    item.itemStatus === 'ACTIVE' ? 'success' :
-                    item.itemStatus === 'PENDING' ? 'warning' :
-                    item.itemStatus === 'COMPLETED' ? 'info' : 'default'
-                  } size="small" />
-                  <Typography variant="body2" color="text.secondary">Starting at <b>${item.startingPrice}</b></Typography>
-                </Box>
-                <Typography variant="caption" color="text.secondary">
-                  Category: {categories.find(c => c.id === item.categoryId)?.name || 'N/A'}
-                </Typography>
-              </CardContent>
-              <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="small"
-                  startIcon={<GavelIcon />}
-                  href={`/items/${item.id}`}
-                  sx={{ borderRadius: 2 }}
-                >
-                  {item.itemStatus === 'ACTIVE' ? 'Bid Now' : 'View'}
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+                )}
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Box display="flex" alignItems="center" justifyContent="space-between">
+                    <Typography variant="h6" fontWeight={600} gutterBottom>{item.title}</Typography>
+                  </Box>
+                  <Typography variant="body2" color="text.secondary" mb={1}>{item.description}</Typography>
+                  <Box display="flex" alignItems="center" gap={1} mb={1}>
+                    <Chip label={item.itemStatus} color={
+                      item.itemStatus === 'ACTIVE' ? 'success' :
+                      item.itemStatus === 'ENDED' ? 'warning' :
+                      item.itemStatus === 'SOLD' ? 'info' : 'default'
+                    } size="small" />
+                    <Typography variant="body2" color="text.secondary">Starting at <b>${item.startingPrice}</b></Typography>
+                  </Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Category: {categories.find(c => c.id === item.categoryId)?.name || 'N/A'}
+                  </Typography>
+                </CardContent>
+                <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
+                  {item.itemStatus === 'ACTIVE' && (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      size="small"
+                      startIcon={<GavelIcon />}
+                      onClick={() => {
+                        console.log('Bid button clicked for item:', item);
+                        handleBidClick(item.itemId);
+                      }}
+                      sx={{ borderRadius: 2 }}
+                    >
+                      Bid Now
+                    </Button>
+                  )}
+                </CardActions>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
       <Box mt={4} display="flex" justifyContent="center">
         <DataTable
           columns={[]}

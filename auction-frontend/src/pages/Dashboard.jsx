@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { FiAward, FiActivity, FiStar, FiBox, FiBell, FiUser, FiShoppingCart, FiPlus } from 'react-icons/fi';
 import api from '../utils/api';
-import { getUserData } from '../utils/auth.jsx';
+import { useAuth } from '../utils/auth';
+import { Navigate, useLocation } from 'react-router-dom';
 
 const StatCard = ({ title, value, icon: Icon, color }) => (
   <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
@@ -13,20 +14,17 @@ const StatCard = ({ title, value, icon: Icon, color }) => (
   </div>
 );
 
-import { Navigate, useLocation } from 'react-router-dom';
-
 const Dashboard = () => {
-  // User info
-  const user = getUserData(); // { id, username, ... }
+  const { user, isAuthenticated } = useAuth();
   const location = useLocation();
-  if (!user) {
-    // Not authenticated, redirect to login
+
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
-// console.log('User in Dashboard:', user);
+
   // Bids
   const { data: bids = [], isLoading: bidsLoading, error: bidsError } = useQuery({
-    queryKey: ['bids', user?.id],
+    queryKey: ['bids', user.id],
     queryFn: async () => {
       const res = await api.get(`/bids/user/${user.id}`);
       return res.data;
@@ -98,7 +96,7 @@ const Dashboard = () => {
       <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-indigo-700 mb-1">Welcome back, {user?.username || 'User'}!</h1>
-          <p className="text-gray-500">Here’s your auction activity and quick actions.</p>
+          <p className="text-gray-500">Here's your auction activity and quick actions.</p>
         </div>
         <div className="flex gap-2">
           <a href="/items" className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition"><FiShoppingCart className="mr-2"/> Browse Auctions</a>
@@ -158,8 +156,6 @@ const Dashboard = () => {
           ))}
         </ul>
       </div>
-
-
 
       {/* Favorites */}
       <div className="bg-white rounded-xl shadow p-6 mb-8">

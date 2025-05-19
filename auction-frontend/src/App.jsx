@@ -24,11 +24,12 @@ import AdminUsersPage from './admin/AdminUsersPage';
 import AdminItemsPage from './admin/AdminItemsPage';
 import Dashboard from './pages/Dashboard.jsx';
 import Items from './pages/items/Items';
+import ItemDetails from './pages/items/ItemDetails';
 import Bids from './pages/Bids';
 import Watchlist from './pages/Watchlist';
 import Wins from './pages/Wins';
 import Notification from './pages/Notification';
-
+import SearchResults from './pages/SearchResults';
 import Profile from './pages/Profile';
 // Test component
 const TestComponent = () => {
@@ -51,12 +52,14 @@ const router = createBrowserRouter(
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/search" element={<SearchResults />} />
       
       {/* Protected User Routes */}
       <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/items" element={<Items />} />
+        <Route path="/items/:id" element={<ItemDetails />} />
         <Route path="/bids" element={<Bids />} />
         <Route path="/watchlist" element={<Watchlist />} />
         <Route path="/wins" element={<Wins />} />

@@ -20,4 +20,11 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     
     List<Item> findByTitleContainingIgnoreCase(String keyword);
     long countByItemStatus(ItemStatus status);
+
+    @Query("SELECT i FROM Item i WHERE " +
+           "LOWER(i.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(i.description) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(i.category.categoryName) LIKE LOWER(CONCAT('%', :query, '%'))")
+    List<Item> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseOrCategoryNameContainingIgnoreCase(
+        String query, String query2, String query3);
 }
