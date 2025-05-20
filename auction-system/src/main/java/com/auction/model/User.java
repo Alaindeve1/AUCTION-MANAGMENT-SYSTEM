@@ -40,6 +40,9 @@ public class User {
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
+    @Enumerated(EnumType.STRING)
+    private UserStatus userStatus;
+
     private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "seller")
@@ -54,6 +57,13 @@ public class User {
     public enum UserRole {
         USER,
         ADMIN
+    }
+
+    public enum UserStatus {
+        ACTIVE,
+        INACTIVE,
+        SUSPENDED,
+        DELETED
     }
 
     @PrePersist
@@ -100,6 +110,14 @@ public class User {
 
     public void setRole(UserRole role) {
         this.role = role;
+    }
+
+    public UserStatus getUserStatus() {
+        return userStatus;
+    }
+
+    public void setUserStatus(UserStatus userStatus) {
+        this.userStatus = userStatus;
     }
 
     public LocalDateTime getCreatedAt() {

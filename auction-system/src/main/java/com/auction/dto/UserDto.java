@@ -31,7 +31,7 @@ public class UserDto {
             user.getUsername(),
             user.getEmail(),
             user.getUserStatus().toString(),
-            user.getRegistrationDate()
+            user.getCreatedAt()
         );
     }
     

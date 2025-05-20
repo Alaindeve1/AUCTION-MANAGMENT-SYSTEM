@@ -47,7 +47,7 @@ public class UserService {
         // Hash the password before saving
         user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
         user.setUserStatus(User.UserStatus.ACTIVE); // Always set to ACTIVE
-        user.setRegistrationDate(LocalDateTime.now());
+        user.setCreatedAt(LocalDateTime.now());
         
         return userRepository.save(user);
     }
