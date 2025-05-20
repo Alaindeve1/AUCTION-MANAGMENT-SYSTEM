@@ -9,4 +9,5 @@ import java.util.List;
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
     List<Notification> findByUserUserId(Long userId);
     List<Notification> findByTarget(String target);
+    List<Notification> findByTitleContainingIgnoreCaseOrMessageContainingIgnoreCase(String title, String message);
 }

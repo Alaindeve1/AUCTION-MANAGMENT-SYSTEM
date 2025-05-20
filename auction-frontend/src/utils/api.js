@@ -21,12 +21,12 @@ api.interceptors.response.use(
           console.error('Server error:', response.data);
           break;
         default:
-          console.error('API Error:', {
-            url: error.config?.url,
+    console.error('API Error:', {
+      url: error.config?.url,
             status: response.status,
-            message: error.message,
+      message: error.message,
             response: response.data
-          });
+    });
       }
     }
     return Promise.reject(error);

@@ -50,8 +50,8 @@ const ItemDetails = () => {
       setBids([]);
     } catch (error) {
       console.error('Error fetching item details:', error);
-      toast.error('Failed to fetch item details');
-      navigate('/items');
+        toast.error('Failed to fetch item details');
+        navigate('/items');
     } finally {
       setLoading(false);
     }
@@ -92,7 +92,7 @@ const ItemDetails = () => {
       fetchItemDetails();
     } catch (error) {
       console.error('Error placing bid:', error);
-      toast.error(error.response?.data?.message || 'Failed to place bid');
+        toast.error(error.response?.data?.message || 'Failed to place bid');
     } finally {
       setPlacingBid(false);
     }

@@ -29,10 +29,10 @@ const Login = () => {
       try {
         const success = await login(values.username, values.password);
         if (success) {
-          toast.success('Login successful!');
-          // Redirect to the attempted URL or dashboard
-          const from = location.state?.from?.pathname || '/dashboard';
-          navigate(from, { replace: true });
+        toast.success('Login successful!');
+        // Redirect to the attempted URL or dashboard
+        const from = location.state?.from?.pathname || '/dashboard';
+        navigate(from, { replace: true });
         } else {
           setError(authError || 'Login failed');
           toast.error(authError || 'Login failed');

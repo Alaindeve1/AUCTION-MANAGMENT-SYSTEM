@@ -30,6 +30,7 @@ import Wins from './pages/Wins';
 import Notification from './pages/Notification';
 import SearchResults from './pages/SearchResults';
 import Profile from './pages/Profile';
+import Help from './pages/Help';
 // Test component
 const TestComponent = () => {
   return (
@@ -55,14 +56,14 @@ const router = createBrowserRouter(
       
       {/* Protected User Routes */}
       <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/items" element={<Items />} />
-        <Route path="/items/:id" element={<ItemDetails />} />
-        <Route path="/bids" element={<Bids />} />
-        <Route path="/wins" element={<Wins />} />
-        <Route path="/notifications" element={<Notification />} />
-        <Route path="/help" element={<div>Help Content</div>} />
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="profile" element={<Profile />} />
+        <Route path="items" element={<Items />} />
+        <Route path="items/:id" element={<ItemDetails />} />
+        <Route path="bids" element={<Bids />} />
+        <Route path="wins" element={<Wins />} />
+        <Route path="notifications" element={<Notification />} />
+        <Route path="help" element={<Help />} />
       </Route>
 
       {/* Admin Routes */}

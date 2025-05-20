@@ -3,9 +3,9 @@ import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from 'react-icons/fa';
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-900 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer className="text-white bg-gray-900">
+      <div className="px-4 py-12 mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           {/* About Section */}
           <div className="space-y-4">
             <h3 className="text-xl font-bold">AuctionHub</h3>
@@ -19,23 +19,23 @@ const Footer = () => {
             <h3 className="text-xl font-bold">Quick Links</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/dashboard" className="text-gray-400 hover:text-white transition-colors">
+                <Link to="/dashboard" className="text-gray-400 transition-colors hover:text-white">
                   Dashboard
                 </Link>
               </li>
               <li>
-                <Link to="/items" className="text-gray-400 hover:text-white transition-colors">
+                <Link to="/items" className="text-gray-400 transition-colors hover:text-white">
                   Browse Items
                 </Link>
               </li>
               <li>
-                <Link to="/categories" className="text-gray-400 hover:text-white transition-colors">
-                  Categories
+                <Link to="/wins" className="text-gray-400 transition-colors hover:text-white">
+                  wins
                 </Link>
               </li>
               <li>
-                <Link to="/auction-results" className="text-gray-400 hover:text-white transition-colors">
-                  Auction Results
+                <Link to="/notifications" className="text-gray-400 transition-colors hover:text-white">
+                  notifications
                 </Link>
               </li>
             </ul>
@@ -45,9 +45,11 @@ const Footer = () => {
           <div className="space-y-4">
             <h3 className="text-xl font-bold">Contact Us</h3>
             <ul className="space-y-2 text-gray-400">
-              <li>Email: support@auctionhub.com</li>
-              <li>Phone: +1 (555) 123-4567</li>
-              <li>Address: 123 Auction Street, City, Country</li>
+                <li>Email:
+                  <a href="alainndizeye11@gmail.com" className="hover:underline">alainndizeye11@gmail.com</a>
+                </li>
+                <li>Phone: +250 799324850</li>
+              <li>Address: Kigali,Rwanda</li>
             </ul>
           </div>
 
@@ -59,15 +61,15 @@ const Footer = () => {
                 href="https://facebook.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-gray-400 transition-colors hover:text-white"
               >
                 <FaFacebook className="w-6 h-6" />
               </a>
               <a
-                href="https://twitter.com"
+                href="https://x.com/ndizeyealain1"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-gray-400 transition-colors hover:text-white"
               >
                 <FaTwitter className="w-6 h-6" />
               </a>
@@ -75,15 +77,15 @@ const Footer = () => {
                 href="https://instagram.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-gray-400 transition-colors hover:text-white"
               >
                 <FaInstagram className="w-6 h-6" />
               </a>
               <a
-                href="https://linkedin.com"
+                href="https://rw.linkedin.com/in/ndizeye-alain?original_referer=https%3A%2F%2Fwww.google.com%2F"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-gray-400 transition-colors hover:text-white"
               >
                 <FaLinkedin className="w-6 h-6" />
               </a>
@@ -92,7 +94,7 @@ const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-8 pt-8 border-t border-gray-800 text-center text-gray-400">
+        <div className="pt-8 mt-8 text-center text-gray-400 border-t border-gray-800">
           <p>&copy; {new Date().getFullYear()} AuctionHub. All rights reserved.</p>
         </div>
       </div>

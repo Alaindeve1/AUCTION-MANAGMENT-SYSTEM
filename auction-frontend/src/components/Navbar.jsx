@@ -16,7 +16,19 @@ const Navbar = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      // Get the current path to determine which type of search to perform
+      const currentPath = location.pathname;
+      
+      // Determine the search type based on the current page
+      let searchType = 'all';
+      if (currentPath.includes('/notifications')) {
+        searchType = 'notifications';
+      } else if (currentPath.includes('/items')) {
+        searchType = 'items';
+      }
+
+      // Navigate to search with both query and type
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}&type=${searchType}`);
     }
   };
 
@@ -44,7 +56,7 @@ const Navbar = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full bg-gray-100 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Search items, categories..."
+                  placeholder="Search items and notifications..."
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

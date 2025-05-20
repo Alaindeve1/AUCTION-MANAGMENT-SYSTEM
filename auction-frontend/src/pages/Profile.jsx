@@ -14,8 +14,14 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import api from '../utils/api';
+import { useAuth } from '../utils/auth';
+import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 
 const Profile = () => {
+  const { user: authUser } = useAuth();
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [edit, setEdit] = useState(false);
   const [form, setForm] = useState({});
@@ -29,8 +35,14 @@ const Profile = () => {
   const fetchProfile = async () => {
     setLoading(true);
     try {
-      // Replace with actual logged-in user ID
-      const userId = localStorage.getItem('userId') || 1;
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const decoded = jwtDecode(token);
+      const userId = decoded.id;
+
       const res = await api.get(`/users/${userId}`);
       setUser(res.data);
       setForm({
@@ -40,6 +52,8 @@ const Profile = () => {
         phone: res.data.phone || '',
       });
     } catch (err) {
+      console.error('Error fetching profile:', err);
+      toast.error('Failed to load profile');
       setUser(null);
     }
     setLoading(false);
@@ -52,14 +66,25 @@ const Profile = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const userId = localStorage.getItem('userId') || 1;
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const decoded = jwtDecode(token);
+      const userId = decoded.id;
+
       await api.put(`/users/${userId}`, {
         ...user,
         ...form,
       });
       setEdit(false);
       fetchProfile();
-    } catch (err) {}
+      toast.success('Profile updated successfully');
+    } catch (err) {
+      console.error('Error updating profile:', err);
+      toast.error('Failed to update profile');
+    }
     setSaving(false);
   };
 

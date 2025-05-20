@@ -262,18 +262,18 @@ const Items = () => {
                 </Typography>
               </CardContent>
               <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
-                {item.itemStatus === 'ACTIVE' && (
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    size="small"
-                    startIcon={<GavelIcon />}
+                  {item.itemStatus === 'ACTIVE' && (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  startIcon={<GavelIcon />}
                     onClick={() => handleBidClick(item)}
-                    sx={{ borderRadius: 2 }}
-                  >
-                    Bid Now
-                  </Button>
-                )}
+                  sx={{ borderRadius: 2 }}
+                >
+                      Bid Now
+                </Button>
+                  )}
               </CardActions>
             </Card>
           </Grid>

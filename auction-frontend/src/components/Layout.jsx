@@ -1,22 +1,51 @@
+import { Box } from '@mui/material';
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
+import { useTheme, useMediaQuery } from '@mui/material';
 
 const Layout = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <Box sx={{ 
+      display: 'flex',
+      minHeight: '100vh',
+      flexDirection: 'column'
+    }}>
       <Navbar />
-      <div className="flex flex-1">
+      <Box sx={{ 
+        display: 'flex',
+        flex: 1,
+        position: 'relative'
+      }}>
         <Sidebar />
-        <main className="flex-1 p-6">
-          <div className="max-w-7xl mx-auto">
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            ml: { sm: '240px' }, // Sidebar width
+            width: { sm: `calc(100% - 240px)` },
+            minHeight: 'calc(100vh - 64px)', // Subtract navbar height
+            backgroundColor: 'background.default',
+            display: 'flex',
+            flexDirection: 'column'
+          }}
+        >
+          <Box sx={{ 
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            p: 3 // Add padding for content
+          }}>
             <Outlet />
-          </div>
-        </main>
-      </div>
-      <Footer />
-    </div>
+          </Box>
+          <Footer />
+        </Box>
+      </Box>
+    </Box>
   );
 };
 

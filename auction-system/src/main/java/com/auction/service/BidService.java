@@ -70,47 +70,47 @@ public class BidService {
     }
 
     @Transactional
-    public Bid placeBid(Long itemId, Long bidderId, BigDecimal bidAmount) {
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new ResourceNotFoundException("Item not found with id: " + itemId));
+public Bid placeBid(Long itemId, Long bidderId, BigDecimal bidAmount) {
+    Item item = itemRepository.findById(itemId)
+            .orElseThrow(() -> new ResourceNotFoundException("Item not found with id: " + itemId));
 
-        User bidder = userRepository.findById(bidderId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + bidderId));
+    User bidder = userRepository.findById(bidderId)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + bidderId));
 
-        // Check if auction is active
-        if (item.getItemStatus() != Item.ItemStatus.ACTIVE) {
-            throw new IllegalStateException("Cannot bid on an item that is not active");
-        }
+    // Check if auction is active
+    if (item.getItemStatus() != Item.ItemStatus.ACTIVE) {
+        throw new IllegalStateException("Cannot bid on an item that is not active");
+    }
 
-        // Check if auction has ended
-        if (item.getEndDate() != null && item.getEndDate().isBefore(LocalDateTime.now())) {
-            throw new IllegalStateException("Cannot bid on an auction that has ended");
-        }
+    // Check if auction has ended
+    if (item.getEndDate() != null && item.getEndDate().isBefore(LocalDateTime.now())) {
+        throw new IllegalStateException("Cannot bid on an auction that has ended");
+    }
 
-        // Check if bid amount is higher than starting price
-        if (bidAmount.compareTo(item.getStartingPrice()) < 0) {
-            throw new IllegalArgumentException("Bid amount must be higher than the starting price");
-        }
+    // Check if bid amount is higher than starting price
+    if (bidAmount.compareTo(item.getStartingPrice()) < 0) {
+        throw new IllegalArgumentException("Bid amount must be higher than the starting price");
+    }
 
-        // Check if bid amount is higher than current highest bid
-        Optional<BigDecimal> highestBid = bidRepository.findHighestBidForItem(itemId);
-        if (highestBid.isPresent() && bidAmount.compareTo(highestBid.get()) <= 0) {
-            throw new IllegalArgumentException("Bid amount must be higher than the current highest bid");
-        }
+    // Check if bid amount is higher than current highest bid
+    Optional<BigDecimal> highestBid = bidRepository.findHighestBidForItem(itemId);
+    if (highestBid.isPresent() && bidAmount.compareTo(highestBid.get()) <= 0) {
+        throw new IllegalArgumentException("Bid amount must be higher than the current highest bid");
+    }
 
         // Create new bid
-        Bid bid = new Bid();
-        bid.setItem(item);
-        bid.setBidder(bidder);
-        bid.setBidAmount(bidAmount);
-        bid.setBidTime(LocalDateTime.now());
+    Bid bid = new Bid();
+    bid.setItem(item);
+    bid.setBidder(bidder);
+    bid.setBidAmount(bidAmount);
+    bid.setBidTime(LocalDateTime.now());
 
         // Set item-specific bid ID
         Long lastItemBidId = bidRepository.findMaxItemBidIdByItemId(itemId);
         bid.setItemBidId(lastItemBidId != null ? lastItemBidId + 1 : 1);
 
-        return bidRepository.save(bid);
-    }
+    return bidRepository.save(bid);
+}
 
     public void deleteBid(Long bidId) {
         if (!bidRepository.existsById(bidId)) {

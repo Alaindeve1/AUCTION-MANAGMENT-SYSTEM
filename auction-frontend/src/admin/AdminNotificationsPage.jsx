@@ -1,41 +1,50 @@
 import React, { useState } from "react";
 import api from "../utils/api";
-import { Paper, Button, TextField, Select, MenuItem, Typography, Snackbar, FormControl, InputLabel } from "@mui/material";
+import { Paper, Button, TextField, Typography, Snackbar, CircularProgress } from "@mui/material";
+import { Send as SendIcon } from '@mui/icons-material';
+import toast from 'react-hot-toast';
 
 const AdminNotificationsPage = () => {
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
-  const [target, setTarget] = useState("ALL");
-  const [snackbar, setSnackbar] = useState({ open: false, message: "" });
   const [loading, setLoading] = useState(false);
 
   const handleSend = async () => {
+    if (!title.trim() || !message.trim()) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
     setLoading(true);
     try {
       await api.post("/notifications", {
         title,
         message,
-        target, // 'ALL' or 'SIGNED_IN'
+        target: "ALL" // Always send to all users
       });
-      setSnackbar({ open: true, message: "Notification sent!" });
+      toast.success("Notification sent successfully!");
       setTitle("");
       setMessage("");
-      setTarget("ALL");
     } catch (err) {
-      setSnackbar({ open: true, message: "Failed to send notification." });
+      console.error('Error sending notification:', err);
+      toast.error(err.response?.data?.message || "Failed to send notification.");
     }
     setLoading(false);
   };
 
   return (
     <Paper elevation={3} sx={{ p: 4, maxWidth: 500, mx: "auto", mt: 4 }}>
-      <Typography variant="h5" gutterBottom>Send Notification</Typography>
+      <Typography variant="h5" gutterBottom color="primary.main" fontWeight={700}>
+        Send Notification to All Users
+      </Typography>
       <TextField
         label="Title"
         fullWidth
         value={title}
         onChange={e => setTitle(e.target.value)}
         margin="normal"
+        required
+        placeholder="Enter notification title"
       />
       <TextField
         label="Message"
@@ -45,18 +54,9 @@ const AdminNotificationsPage = () => {
         value={message}
         onChange={e => setMessage(e.target.value)}
         margin="normal"
+        required
+        placeholder="Enter notification message"
       />
-      <FormControl fullWidth margin="normal">
-        <InputLabel>Target Users</InputLabel>
-        <Select
-          value={target}
-          label="Target Users"
-          onChange={e => setTarget(e.target.value)}
-        >
-          <MenuItem value="ALL">All Users (guests + signed in)</MenuItem>
-          <MenuItem value="SIGNED_IN">Signed-in Users (accounts only)</MenuItem>
-        </Select>
-      </FormControl>
       <Button
         variant="contained"
         color="primary"
@@ -64,15 +64,10 @@ const AdminNotificationsPage = () => {
         onClick={handleSend}
         disabled={loading || !title || !message}
         sx={{ mt: 2 }}
+        startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SendIcon />}
       >
-        Send Notification
+        {loading ? 'Sending...' : 'Send to All Users'}
       </Button>
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar({ open: false, message: "" })}
-        message={snackbar.message}
-      />
     </Paper>
   );
 };

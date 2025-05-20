@@ -28,4 +28,15 @@ public class NotificationService {
     public List<Notification> getNotificationsByTarget(String target) {
         return notificationRepository.findByTarget(target);
     }
+
+    public List<Notification> searchNotifications(String query) {
+        return notificationRepository.findByTitleContainingIgnoreCaseOrMessageContainingIgnoreCase(query, query);
+    }
+
+    public void markAsRead(Long notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+            .orElseThrow(() -> new RuntimeException("Notification not found"));
+        notification.setRead(true);
+        notificationRepository.save(notification);
+    }
 }

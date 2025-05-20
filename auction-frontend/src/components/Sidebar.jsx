@@ -1,97 +1,95 @@
-import { NavLink } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
-  FiHome,
-  FiPackage,
-  FiGrid,
-  FiUsers,
-  FiAward,
-  FiDollarSign,
-  FiUser,
-  FiSettings,
-  FiHelpCircle,
-} from 'react-icons/fi';
-
-const navigation = [
-  { name: 'Dashboard', to: '/dashboard', icon: FiHome },
-  { name: 'Items', to: '/items', icon: FiPackage },
-  { name: 'Bids', to: '/bids', icon: FiDollarSign },
-  { name: 'Wins', to: '/wins', icon: FiAward },
-  { name: 'Notifications', to: '/notifications', icon: FiUsers },
-  { name: 'Profile', to: '/profile', icon: FiUser },
-];
-
-const secondaryNavigation = [
-  { name: 'Help & Support', to: '/help', icon: FiHelpCircle },
-];
+  Box,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Divider,
+  useTheme,
+  useMediaQuery
+} from '@mui/material';
+import {
+  Dashboard as DashboardIcon,
+  Notifications as NotificationsIcon,
+  Gavel as GavelIcon,
+  EmojiEvents as EmojiEventsIcon,
+  Person as PersonIcon,
+  Help as HelpIcon
+} from '@mui/icons-material';
 
 const Sidebar = () => {
-  return (
-    <div className="w-64 bg-white shadow-lg h-[calc(100vh-4rem)] flex flex-col">
-      <div className="flex-1 overflow-y-auto">
-        <nav className="mt-5 px-2">
-          <div className="space-y-1">
-            {navigation.map((item) => (
-              <NavLink
-                key={item.name}
-                to={item.to}
-                className={({ isActive }) =>
-                  `group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
-                    isActive
-                      ? 'bg-indigo-50 text-indigo-600'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <item.icon
-                      className={`mr-3 h-5 w-5 ${
-                        isActive ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500'
-                      }`}
-                      aria-hidden="true"
-                    />
-                    {item.name}
-                  </>
-                )}
-              </NavLink>
-            ))}
-          </div>
-        </nav>
-      </div>
+  const location = useLocation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-      {/* Secondary Navigation */}
-      <div className="border-t border-gray-200 pt-4 pb-4">
-        <nav className="px-2">
-          <div className="space-y-1">
-            {secondaryNavigation.map((item) => (
-              <NavLink
-                key={item.name}
-                to={item.to}
-                className={({ isActive }) =>
-                  `group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
-                    isActive
-                      ? 'bg-indigo-50 text-indigo-600'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <item.icon
-                      className={`mr-3 h-5 w-5 ${
-                        isActive ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500'
-                      }`}
-                      aria-hidden="true"
-                    />
-                    {item.name}
-                  </>
-                )}
-              </NavLink>
-            ))}
-          </div>
-        </nav>
-      </div>
-    </div>
+  const menuItems = [
+    { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
+    { text: 'Items', icon: <GavelIcon />, path: '/items' },
+    { text: 'My Bids', icon: <GavelIcon />, path: '/bids' },
+    { text: 'My Wins', icon: <EmojiEventsIcon />, path: '/wins' },
+    { text: 'Notifications', icon: <NotificationsIcon />, path: '/notifications' },
+    { text: 'Profile', icon: <PersonIcon />, path: '/profile' },
+    { text: 'Help & Support', icon: <HelpIcon />, path: '/help' }
+  ];
+
+  return (
+    <Box
+      sx={{
+        width: isMobile ? '100%' : 240,
+        flexShrink: 0,
+        borderRight: '1px solid',
+        borderColor: 'divider',
+        height: '100vh',
+        position: isMobile ? 'relative' : 'fixed',
+        backgroundColor: 'background.paper'
+      }}
+    >
+      <List>
+        {menuItems.map((item) => (
+          <ListItem
+            button
+            component={Link}
+            to={item.path}
+            key={item.text}
+            selected={location.pathname === item.path}
+            sx={{
+              '&.Mui-selected': {
+                backgroundColor: 'primary.light',
+                '&:hover': {
+                  backgroundColor: 'primary.light',
+                },
+                '& .MuiListItemIcon-root': {
+                  color: 'primary.main',
+                },
+                '& .MuiListItemText-primary': {
+                  color: 'primary.main',
+                  fontWeight: 'bold',
+                },
+              },
+              '&:hover': {
+                backgroundColor: 'action.hover',
+              },
+            }}
+          >
+            <ListItemIcon
+              sx={{
+                color: location.pathname === item.path ? 'primary.main' : 'text.secondary',
+              }}
+            >
+              {item.icon}
+            </ListItemIcon>
+            <ListItemText
+              primary={item.text}
+              primaryTypographyProps={{
+                color: location.pathname === item.path ? 'primary.main' : 'text.primary',
+                fontWeight: location.pathname === item.path ? 'bold' : 'normal',
+              }}
+            />
+          </ListItem>
+        ))}
+      </List>
+    </Box>
   );
 };
 
