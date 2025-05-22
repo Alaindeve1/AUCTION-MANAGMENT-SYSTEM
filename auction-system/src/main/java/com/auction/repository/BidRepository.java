@@ -14,23 +14,27 @@ import java.util.Optional;
 public interface BidRepository extends JpaRepository<Bid, Long> {
     List<Bid> findByItemItemId(Long itemId);
     List<Bid> findByBidderUserId(Long userId);
+    List<Bid> findByBidderUserIdOrderByBidTimeDesc(Long userId);
     
     @Query("SELECT MAX(b.bidAmount) FROM Bid b WHERE b.item.itemId = :itemId")
-    Optional<BigDecimal> findHighestBidForItem(Long itemId);
+    Optional<BigDecimal> findHighestBidForItem(@Param("itemId") Long itemId);
+    
+    @Query("SELECT MAX(b.bidAmount) FROM Bid b WHERE b.item.itemId = :itemId")
+    Optional<BigDecimal> findHighestBidAmountByItemId(@Param("itemId") Long itemId);
     
     @Query("SELECT b FROM Bid b WHERE b.item.itemId = :itemId AND b.bidAmount = " +
            "(SELECT MAX(b2.bidAmount) FROM Bid b2 WHERE b2.item.itemId = :itemId)")
-    Optional<Bid> findHighestBidWithBidderForItem(Long itemId);
+    Optional<Bid> findHighestBidWithBidderForItem(@Param("itemId") Long itemId);
     
     @Query("SELECT COUNT(b) FROM Bid b WHERE b.item.itemId = :itemId")
-    long countBidsByItemId(Long itemId);
-
-    @Query("SELECT COALESCE(SUM(b.bidAmount), 0) FROM Bid b")
-    BigDecimal getTotalBidValue();
-
+    long countBidsByItemId(@Param("itemId") Long itemId);
+    
     @Query("SELECT COUNT(DISTINCT b.bidder.userId) FROM Bid b")
     long countUniqueBidders();
-
-    @Query("SELECT MAX(b.itemBidId) FROM Bid b WHERE b.item.itemId = :itemId")
-    Long findMaxItemBidIdByItemId(@Param("itemId") Long itemId);
+    
+    @Query("SELECT SUM(b.bidAmount) FROM Bid b")
+    BigDecimal getTotalBidValue();
+    
+    @Query("SELECT CASE WHEN COUNT(b) > 0 THEN true ELSE false END FROM Bid b WHERE b.item.itemId = :itemId AND b.bidAmount > :amount")
+    boolean existsByItemIdAndAmountGreaterThan(@Param("itemId") Long itemId, @Param("amount") BigDecimal amount);
 }

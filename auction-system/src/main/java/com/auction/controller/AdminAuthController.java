@@ -4,7 +4,6 @@ import com.auction.dto.AdminLoginRequest;
 import com.auction.model.User;
 import com.auction.repository.UserRepository;
 import com.auction.service.JwtService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -17,14 +16,18 @@ import java.util.Map;
 @CrossOrigin(origins = "http://localhost:3000", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
 public class AdminAuthController {
 
-    @Autowired
-    private UserRepository userRepository;
-    
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
-    
-    @Autowired
-    private JwtService jwtService;
+    private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+
+    public AdminAuthController(
+            UserRepository userRepository,
+            BCryptPasswordEncoder passwordEncoder,
+            JwtService jwtService) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> adminLogin(@RequestBody AdminLoginRequest request) {
@@ -42,7 +45,7 @@ public class AdminAuthController {
                 return ResponseEntity.status(401).body(error);
             }
             
-            String token = jwtService.generateToken(user.getUserId(), user.getUsername(), user.getEmail(), user.getRole().name());
+            String token = jwtService.generateToken(user);
             Map<String, Object> response = new HashMap<>();
             response.put("token", token);
             response.put("username", user.getUsername());

@@ -1,6 +1,7 @@
 package com.auction.controller;
 
 import com.auction.dto.BidDto;
+import com.auction.dto.UserBidDTO;
 import com.auction.model.Bid;
 import com.auction.service.BidService;
 import org.springframework.http.HttpStatus;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -94,5 +96,10 @@ public class BidController {
     public ResponseEntity<Void> deleteBid(@PathVariable("id") Long bidId) {
         bidService.deleteBid(bidId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/user")
+    public ResponseEntity<List<UserBidDTO>> getUserBids() {
+        return ResponseEntity.ok(bidService.getUserBids());
     }
 }

@@ -41,8 +41,11 @@ public class Bid {
 
     @NotNull
     @Positive
+    @Column(nullable = false)
     private BigDecimal bidAmount;
 
+    @NotNull
+    @Column(nullable = false)
     private LocalDateTime bidTime;
 
     @Column(name = "item_bid_id")
@@ -51,6 +54,47 @@ public class Bid {
     @PrePersist
     protected void onCreate() {
         bidTime = LocalDateTime.now();
+    }
+
+    // Getters and Setters
+    public Long getBidId() {
+        return bidId;
+    }
+
+    public void setBidId(Long bidId) {
+        this.bidId = bidId;
+    }
+
+    public Item getItem() {
+        return item;
+    }
+
+    public void setItem(Item item) {
+        this.item = item;
+    }
+
+    public User getBidder() {
+        return bidder;
+    }
+
+    public void setBidder(User bidder) {
+        this.bidder = bidder;
+    }
+
+    public BigDecimal getAmount() {
+        return bidAmount;
+    }
+
+    public void setAmount(BigDecimal bidAmount) {
+        this.bidAmount = bidAmount;
+    }
+
+    public LocalDateTime getBidDate() {
+        return bidTime;
+    }
+
+    public void setBidDate(LocalDateTime bidTime) {
+        this.bidTime = bidTime;
     }
 
     public Long getItemBidId() {

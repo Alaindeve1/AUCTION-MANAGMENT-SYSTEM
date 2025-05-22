@@ -1,98 +1,116 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../utils/auth';
+import { useWebSocket } from '../../contexts/WebSocketContext';
+import { toast } from 'react-hot-toast';
 import {
   Box,
-  Typography,
+  Button,
   Card,
   CardContent,
+  CardMedia,
+  Typography,
+  TextField,
+  CircularProgress,
   Grid,
   Chip,
-  CircularProgress,
-  TextField,
-  Button,
   Paper,
   Divider
 } from '@mui/material';
 import { Gavel as GavelIcon } from '@mui/icons-material';
-import { format } from 'date-fns';
 import api from '../../utils/api';
-import toast from 'react-hot-toast';
-import { useAuth } from '../../utils/auth';
-import { jwtDecode } from 'jwt-decode';
 
 const ItemDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { subscribeToItemBidUpdates, placeBid, isConnected } = useWebSocket();
   const [item, setItem] = useState(null);
-  const [bids, setBids] = useState([]);
   const [loading, setLoading] = useState(true);
   const [bidAmount, setBidAmount] = useState('');
+  const [bidError, setBidError] = useState('');
   const [placingBid, setPlacingBid] = useState(false);
 
   useEffect(() => {
-    if (!id) {
-      toast.error('Invalid item ID');
-      navigate('/items');
-      return;
-    }
-
-    fetchItemDetails();
-  }, [id]);
-
   const fetchItemDetails = async () => {
-    if (!id) return;
-
     try {
       setLoading(true);
-      const itemResponse = await api.get(`/items/${id}`);
-      setItem(itemResponse.data);
-      setBids([]);
+        const response = await api.get(`/items/${id}`);
+        console.log('Item details response:', response.data);
+        setItem(response.data);
     } catch (error) {
       console.error('Error fetching item details:', error);
         toast.error('Failed to fetch item details');
-        navigate('/items');
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePlaceBid = async () => {
-    if (!id) {
-      toast.error('Invalid item ID');
-      return;
-    }
+    fetchItemDetails();
+  }, [id]);
 
-    if (!user) {
-      toast.error('Please log in to place a bid');
-      return;
-    }
+  useEffect(() => {
+    if (!item?.itemId) return;
 
-    // Decode the JWT token to get the user ID
-    const decodedToken = jwtDecode(user.token);
-    const userId = decodedToken.id;
+    const unsubscribe = subscribeToItemBidUpdates(item.itemId, (bidUpdate) => {
+      console.log('Received bid update:', bidUpdate);
+      if (bidUpdate.amount) {
+        setItem(prev => ({
+          ...prev,
+          currentHighestBid: bidUpdate.amount,
+          highestBidder: bidUpdate.bidderId,
+          highestBidderName: bidUpdate.bidderName
+        }));
 
-    if (!userId) {
-      toast.error('Unable to get user ID');
+        // Show notification if the current user was outbid
+        if (user && bidUpdate.bidderId !== user.id) {
+          toast(`New bid placed: $${bidUpdate.amount}`, {
+            icon: '💰',
+            duration: 5000,
+          });
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, [item?.itemId, subscribeToItemBidUpdates, user]);
+
+  const handleBidSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!isConnected) {
+      toast.error('Connection lost. Please refresh the page and try again.');
       return;
     }
 
     const amount = parseFloat(bidAmount);
-    if (!amount || amount <= 0) {
-      toast.error('Please enter a valid bid amount');
+    if (isNaN(amount) || amount <= 0) {
+      setBidError('Please enter a valid bid amount');
       return;
     }
 
+    if (amount <= (item.currentHighestBid || item.startingPrice)) {
+      setBidError(`Bid must be higher than $${(item.currentHighestBid || item.startingPrice).toLocaleString()}`);
+      return;
+    }
+
+    setPlacingBid(true);
+    setBidError('');
+
     try {
-      setPlacingBid(true);
-      await api.post(`/bids?itemId=${id}&bidderId=${userId}&bidAmount=${amount}`);
-      
-      toast.success('Bid placed successfully!');
-      setBidAmount('');
-      fetchItemDetails();
+      console.log('Placing bid for item:', item.itemId);
+      const success = placeBid({
+        itemId: item.itemId,
+        amount
+      });
+
+      if (success) {
+        setBidAmount('');
+        toast.success('Processing your bid...');
+      }
     } catch (error) {
       console.error('Error placing bid:', error);
-        toast.error(error.response?.data?.message || 'Failed to place bid');
+      toast.error('Failed to place bid. Please try again.');
     } finally {
       setPlacingBid(false);
     }
@@ -100,7 +118,7 @@ const ItemDetails = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="200px">
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
         <CircularProgress />
       </Box>
     );
@@ -108,106 +126,166 @@ const ItemDetails = () => {
 
   if (!item) {
     return (
-      <Box textAlign="center" py={8}>
-        <Typography color="text.secondary">Item not found</Typography>
+      <Box sx={{ textAlign: 'center', mt: 4 }}>
+        <Typography variant="h6" color="text.secondary">
+          Item not found
+        </Typography>
       </Box>
     );
   }
 
-  return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-        <Typography variant="h4" fontWeight={700} color="primary.main">{item.title}</Typography>
-        <Chip
-          label={item.itemStatus}
-          color={
-            item.itemStatus === 'ACTIVE' ? 'success' :
-            item.itemStatus === 'ENDED' ? 'warning' :
-            item.itemStatus === 'SOLD' ? 'info' : 'default'
-          }
-        />
-      </Box>
+  const isActive = item.itemStatus === 'ACTIVE';
+  const isSold = item.itemStatus === 'SOLD';
+  const isEnded = item.itemStatus === 'ENDED';
 
+  return (
+    <Box sx={{ p: 3 }}>
       <Grid container spacing={3}>
-        <Grid item xs={12} md={8}>
-          <Card sx={{ mb: 3 }}>
-            {item.imageUrl && (
-              <Box
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardMedia
                 component="img"
-                src={item.imageUrl}
+              height="400"
+              image={item.imageUrl || 'https://via.placeholder.com/600x400'}
                 alt={item.title}
-                sx={{
-                  width: '100%',
-                  height: 400,
-                  objectFit: 'cover'
-                }}
-              />
-            )}
-            <CardContent>
-              <Typography variant="h6" gutterBottom>Description</Typography>
-              <Typography color="text.secondary" paragraph>{item.description}</Typography>
-              
-              <Typography variant="h6" gutterBottom>Details</Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="text.secondary">Starting Price</Typography>
-                  <Typography variant="body1">${item.startingPrice}</Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="text.secondary">Current Highest Bid</Typography>
-                  <Typography variant="body1">
-                    ${item.startingPrice}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="text.secondary">Start Date</Typography>
-                  <Typography variant="body1">
-                    {format(new Date(item.startDate), 'MMM dd, yyyy HH:mm')}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="text.secondary">End Date</Typography>
-                  <Typography variant="body1">
-                    {format(new Date(item.endDate), 'MMM dd, yyyy HH:mm')}
-                  </Typography>
-                </Grid>
-              </Grid>
-            </CardContent>
+              sx={{ objectFit: 'cover' }}
+            />
           </Card>
         </Grid>
+        
+        <Grid item xs={12} md={6}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent>
+              <Box sx={{ mb: 2 }}>
+                <Chip 
+                  label={isActive ? 'Live' : isSold ? 'Sold' : 'Ended'} 
+                  color={isActive ? 'success' : isSold ? 'error' : 'warning'} 
+                  sx={{ mb: 2 }}
+                />
+                <Typography variant="h4" component="h1" gutterBottom>
+                  {item.title}
+                </Typography>
+                <Typography variant="body1" color="text.secondary" paragraph>
+                  {item.description}
+                </Typography>
+              </Box>
 
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>Place a Bid</Typography>
-            <Box sx={{ mb: 2 }}>
+              <Divider sx={{ my: 2 }} />
+
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <Paper sx={{ p: 2, bgcolor: 'background.default' }}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Category
+                    </Typography>
+                    <Typography variant="body1">
+                      {item.categoryName || 'N/A'}
+                    </Typography>
+                  </Paper>
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <Paper sx={{ p: 2, bgcolor: 'background.default' }}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Starting Price
+                    </Typography>
+                    <Typography variant="body1" color="primary" fontWeight="bold">
+                      ${item.startingPrice.toLocaleString()}
+                    </Typography>
+                  </Paper>
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <Paper sx={{ p: 2, bgcolor: 'background.default' }}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Current Highest Bid
+                    </Typography>
+                    <Typography variant="body1" color="primary" fontWeight="bold">
+                      ${(item.currentHighestBid || item.startingPrice).toLocaleString()}
+                  </Typography>
+                  </Paper>
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <Paper sx={{ p: 2, bgcolor: 'background.default' }}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Start Date
+                    </Typography>
+                  <Typography variant="body1">
+                      {item.startDate ? new Date(item.startDate).toLocaleString() : 'Not set'}
+                  </Typography>
+                  </Paper>
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <Paper sx={{ p: 2, bgcolor: 'background.default' }}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      End Date
+                    </Typography>
+                  <Typography variant="body1">
+                      {item.endDate ? new Date(item.endDate).toLocaleString() : 'Not set'}
+                  </Typography>
+                  </Paper>
+                </Grid>
+              </Grid>
+
+              {isActive && (
+                <Box component="form" onSubmit={handleBidSubmit} sx={{ mt: 3 }}>
+                  <Typography variant="h6" gutterBottom>
+                    Place Your Bid
+                  </Typography>
+                  
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <TextField
                 fullWidth
-                label="Your Bid Amount"
+                      label="Bid Amount"
                 type="number"
                 value={bidAmount}
-                onChange={(e) => setBidAmount(e.target.value)}
+                      onChange={(e) => {
+                        setBidAmount(e.target.value);
+                        setBidError('');
+                      }}
+                      error={Boolean(bidError)}
+                      helperText={bidError}
+                      disabled={placingBid || !isConnected}
                 InputProps={{
-                  startAdornment: '$'
+                        startAdornment: <Typography sx={{ mr: 1 }}>$</Typography>,
                 }}
-                disabled={item.itemStatus !== 'ACTIVE' || placingBid}
               />
-            </Box>
             <Button
-              fullWidth
+                      type="submit"
               variant="contained"
               color="primary"
+                      size="large"
               startIcon={<GavelIcon />}
-              onClick={handlePlaceBid}
-              disabled={item.itemStatus !== 'ACTIVE' || placingBid}
+                      disabled={placingBid || !isConnected}
+                      sx={{ minWidth: 150 }}
             >
-              {placingBid ? <CircularProgress size={24} /> : 'Place Bid'}
+                      {placingBid ? 'Placing Bid...' : 'Place Bid'}
             </Button>
+                  </Box>
+                  
+                  {!isConnected && (
+                    <Typography color="error" sx={{ mt: 1 }}>
+                      Connection lost. Please refresh the page to place a bid.
+                    </Typography>
+                  )}
+                </Box>
+              )}
 
-            <Divider sx={{ my: 3 }} />
-
-            <Typography variant="h6" gutterBottom>Bid History</Typography>
-            <Typography color="text.secondary">Bid history is currently unavailable</Typography>
-          </Paper>
+              {!isActive && (
+                <Box sx={{ mt: 3, textAlign: 'center' }}>
+                  <Typography 
+                    variant="h6" 
+                    color={isSold ? 'error' : 'text.secondary'}
+                    sx={{ fontStyle: 'italic' }}
+                  >
+                    {isSold ? 'This item has been sold' : 'This auction has ended'}
+                  </Typography>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
         </Grid>
       </Grid>
     </Box>

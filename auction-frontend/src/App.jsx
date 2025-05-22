@@ -3,6 +3,7 @@ import { createRoutesFromElements, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './utils/auth';
+import { WebSocketProvider } from './contexts/WebSocketContext';
 import Layout from './components/Layout';
 import Login from './pages/auth/Login';
 import Signup from './pages/auth/Signup';
@@ -25,7 +26,7 @@ import AdminItemsPage from './admin/AdminItemsPage';
 import Dashboard from './pages/Dashboard.jsx';
 import Items from './pages/items/Items';
 import ItemDetails from './pages/items/ItemDetails';
-import Bids from './pages/Bids';
+import UserBids from './pages/bids/UserBids';
 import Wins from './pages/Wins';
 import Notification from './pages/Notification';
 import SearchResults from './pages/SearchResults';
@@ -60,7 +61,7 @@ const router = createBrowserRouter(
         <Route path="profile" element={<Profile />} />
         <Route path="items" element={<Items />} />
         <Route path="items/:id" element={<ItemDetails />} />
-        <Route path="bids" element={<Bids />} />
+        <Route path="bids" element={<UserBids />} />
         <Route path="wins" element={<Wins />} />
         <Route path="notifications" element={<Notification />} />
         <Route path="help" element={<Help />} />
@@ -86,9 +87,11 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Toaster position="top-right" />
       <AuthProvider>
-        <AdminAuthProvider>
-          <RouterProvider router={router} />
-        </AdminAuthProvider>
+        <WebSocketProvider>
+          <AdminAuthProvider>
+            <RouterProvider router={router} />
+          </AdminAuthProvider>
+        </WebSocketProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

@@ -1,5 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import { useWebSocket } from '../../contexts/WebSocketContext';
+import { toast } from 'react-hot-toast';
 import {
   Box,
   Button,
@@ -26,7 +29,6 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import DataTable from '../../components/common/DataTable';
 import api from '../../utils/api';
-import toast from 'react-hot-toast';
 
 const validationSchema = Yup.object({
   title: Yup.string().required('Title is required'),
@@ -48,7 +50,11 @@ const Items = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusTab, setStatusTab] = useState('ACTIVE'); // ACTIVE, ENDED, SOLD
   const [loading, setLoading] = useState(true);
+  const [currentBids, setCurrentBids] = useState({});
+  const { subscribeToBidUpdates, subscribeToItemBidUpdates, placeBid, isConnected } = useWebSocket();
+  const itemSubscriptions = useRef(new Map());
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
 
   const formik = useFormik({
     initialValues: {
@@ -56,6 +62,8 @@ const Items = () => {
       description: '',
       startingPrice: '',
       categoryId: '',
+      startDate: '',
+      endDate: '',
     },
     validationSchema,
     onSubmit: async (values) => {
@@ -81,7 +89,8 @@ const Items = () => {
       console.log('Fetching items with status:', statusTab);
 
       const response = await api.get(`/items/status/${statusTab}`);
-      console.log('API Response:', response.data);
+      console.log('Raw API Response:', response);
+      console.log('API Response data:', response.data);
 
       // Handle both paginated and non-paginated responses
       let itemsData;
@@ -93,8 +102,38 @@ const Items = () => {
         itemsData = [];
       }
 
-      console.log('Items data:', itemsData);
+      console.log('Processed items data:', itemsData);
       
+      // Initialize current bids from the fetched items
+      const initialBids = {};
+      itemsData.forEach(item => {
+        if (!item) {
+          console.warn('Null or undefined item found in response');
+          return;
+        }
+        
+        console.log('Processing item:', item);
+        
+        if (item.currentBid) {
+          initialBids[item.id] = {
+            amount: item.currentBid,
+            bidderId: item.highestBidder,
+            bidderName: item.highestBidderName || 'Anonymous',
+            timestamp: new Date().toISOString()
+          };
+        } else {
+          // Set initial bid to starting price if no bids yet
+          initialBids[item.id] = {
+            amount: item.startingPrice,
+            bidderId: null,
+            bidderName: 'No bids yet',
+            timestamp: null
+          };
+        }
+      });
+      
+      console.log('Initial bids:', initialBids);
+      setCurrentBids(initialBids);
       setItems(itemsData);
       setTotalCount(itemsData.length);
     } catch (error) {
@@ -116,6 +155,156 @@ const Items = () => {
     }
   };
 
+  const handleBid = async (itemId, currentPrice) => {
+    if (!currentUser) {
+      toast.error('Please log in to place a bid');
+      return;
+    }
+
+    if (!itemId) {
+      console.error('Invalid itemId in handleBid:', itemId);
+      toast.error('Invalid item ID');
+      return;
+    }
+
+    const bidAmount = parseFloat(prompt('Enter your bid amount:'));
+    if (isNaN(bidAmount) || bidAmount <= currentPrice) {
+      toast.error('Bid amount must be higher than the current price');
+      return;
+    }
+
+    try {
+      // Place bid via WebSocket
+      const success = placeBid({
+        itemId: String(itemId), // Ensure itemId is a string
+        amount: bidAmount,
+        userId: currentUser.id,
+      });
+      
+      if (success) {
+        toast.success('Processing your bid...');
+      }
+    } catch (error) {
+      console.error('Error placing bid:', error);
+      toast.error('Failed to place bid. Please try again.');
+    }
+  };
+
+  const handleBidUpdate = useCallback((bidUpdate) => {
+    console.log('Received bid update:', bidUpdate);
+    
+    // Update the current bids state
+    setCurrentBids(prev => ({
+      ...prev,
+      [bidUpdate.itemId]: {
+        amount: bidUpdate.amount,
+        bidderId: bidUpdate.bidderId,
+        bidderName: bidUpdate.bidderName,
+        timestamp: new Date().toISOString()
+      }
+    }));
+
+    // Update the items list with the new bid
+    setItems(prevItems => 
+      prevItems.map(item => 
+        item.id === bidUpdate.itemId 
+          ? { 
+              ...item, 
+              currentBid: bidUpdate.amount,
+              highestBidder: bidUpdate.bidderId,
+              highestBidderName: bidUpdate.bidderName
+            } 
+          : item
+      )
+    );
+
+    // Show notification if the current user was outbid
+    if (currentUser && bidUpdate.bidderId !== currentUser.id) {
+      toast(`You've been outbid on item #${bidUpdate.itemId} with $${bidUpdate.amount}`, {
+        icon: '💰',
+        duration: 5000,
+      });
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    fetchItems();
+    fetchCategories();
+
+    // Subscribe to general bid updates
+    const unsubscribeGeneral = subscribeToBidUpdates(handleBidUpdate);
+
+    // Subscribe to item-specific bid updates
+    items.forEach(item => {
+      if (!item || !item.id) {
+        console.warn('Invalid item found in items array:', item);
+        return;
+      }
+      
+      console.log(`Setting up subscription for item ${item.id}`);
+      if (!itemSubscriptions.current.has(item.id)) {
+        const unsubscribe = subscribeToItemBidUpdates(item.id, handleBidUpdate);
+        itemSubscriptions.current.set(item.id, unsubscribe);
+      }
+    });
+
+    return () => {
+      // Cleanup all subscriptions
+      unsubscribeGeneral();
+      itemSubscriptions.current.forEach((unsubscribe, itemId) => {
+        console.log(`Cleaning up subscription for item ${itemId}`);
+        unsubscribe();
+      });
+      itemSubscriptions.current.clear();
+    };
+  }, [statusTab, subscribeToBidUpdates, subscribeToItemBidUpdates, handleBidUpdate]);
+
+  // Update subscriptions when items change
+  useEffect(() => {
+    // Unsubscribe from removed items
+    itemSubscriptions.current.forEach((unsubscribe, itemId) => {
+      if (!items.find(item => item && item.id === itemId)) {
+        console.log(`Removing subscription for removed item ${itemId}`);
+        unsubscribe();
+        itemSubscriptions.current.delete(itemId);
+      }
+    });
+
+    // Subscribe to new items
+    items.forEach(item => {
+      if (!item || !item.id) {
+        console.warn('Invalid item found in items array:', item);
+        return;
+      }
+      
+      if (!itemSubscriptions.current.has(item.id)) {
+        console.log(`Adding subscription for new item ${item.id}`);
+        const unsubscribe = subscribeToItemBidUpdates(item.id, handleBidUpdate);
+        itemSubscriptions.current.set(item.id, unsubscribe);
+      }
+    });
+  }, [items, subscribeToItemBidUpdates, handleBidUpdate]);
+
+  useEffect(() => {
+    if (!items.length) return;
+
+    // Subscribe to updates for each item
+    items.forEach(item => {
+      if (!itemSubscriptions.current.has(item.id)) {
+        const unsubscribe = subscribeToItemBidUpdates(item.id, handleBidUpdate);
+        itemSubscriptions.current.set(item.id, unsubscribe);
+      }
+    });
+
+    // Clean up subscriptions when component unmounts or items change
+    return () => {
+      itemSubscriptions.current.forEach(unsubscribe => {
+        if (unsubscribe) unsubscribe();
+      });
+      itemSubscriptions.current.clear();
+    };
+  }, [items, subscribeToItemBidUpdates, handleBidUpdate]);
+
   useEffect(() => {
     fetchItems();
     fetchCategories();
@@ -125,10 +314,12 @@ const Items = () => {
     setSelectedItem(item);
     if (item) {
       formik.setValues({
-        title: item.title,
-        description: item.description,
-        startingPrice: item.startingPrice,
-        categoryId: item.categoryId,
+        title: item.title || '',
+        description: item.description || '',
+        startingPrice: item.startingPrice || '',
+        categoryId: item.categoryId || '',
+        startDate: item.startDate || '',
+        endDate: item.endDate || '',
       });
     } else {
       formik.resetForm();
@@ -155,11 +346,21 @@ const Items = () => {
   };
 
   const handleBidClick = (item) => {
-    console.log('Bid button clicked, item:', item);
-    if (!item || !item.itemId) {
+    console.log('Bid button clicked, full item object:', JSON.stringify(item, null, 2));
+    
+    if (!item) {
+      console.error('handleBidClick received null or undefined item');
+      toast.error('Invalid item');
+      return;
+    }
+
+    if (!item.itemId) {
+      console.error('handleBidClick received item without itemId:', item);
       toast.error('Invalid item ID');
       return;
     }
+
+    console.log(`Navigating to item details for item ${item.itemId}`);
     navigate(`/items/${item.itemId}`);
   };
 
@@ -201,84 +402,159 @@ const Items = () => {
   ];
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-        <Typography variant="h4" fontWeight={700} color="primary.main">Auction Items</Typography>
+    <Box sx={{ p: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+        <Typography variant="h4">Auction Items</Typography>
       </Box>
+
       <Tabs
         value={statusTab}
-        onChange={(e, v) => {
-          setStatusTab(v);
-          setPage(0);
-        }}
-        indicatorColor="primary"
-        textColor="primary"
+        onChange={(e, newValue) => setStatusTab(newValue)}
         sx={{ mb: 3 }}
       >
-        <Tab label="Active" value="ACTIVE" />
-        <Tab label="Ended" value="ENDED" />
-        <Tab label="Sold" value="SOLD" />
+        <Tab label="Active Auctions" value="ACTIVE" />
+        <Tab label="Ended Auctions" value="ENDED" />
+        <Tab label="Sold Items" value="SOLD" />
       </Tabs>
+
       {loading ? (
-        <Box display="flex" justifyContent="center" alignItems="center" height="200px">
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
           <CircularProgress />
         </Box>
+      ) : items.length === 0 ? (
+        <Box sx={{ textAlign: 'center', mt: 4 }}>
+          <Typography variant="h6" color="text.secondary">
+            No items found
+          </Typography>
+        </Box>
       ) : (
-      <Grid container spacing={3}>
-        {items.length === 0 && (
-          <Grid item xs={12}>
-            <Box textAlign="center" py={8}>
-              <Typography color="text.secondary">No items found in this category.</Typography>
-            </Box>
-          </Grid>
-        )}
-        {items.map((item) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={item.id || `item-${item.title}-${item.startingPrice}`}>
-            <Card sx={{ display: 'flex', flexDirection: 'column', height: '100%', borderRadius: 3, boxShadow: 3 }}>
-              {item.imageUrl && (
-                <CardMedia
-                  component="img"
-                  height="180"
-                  image={item.imageUrl}
-                  alt={item.title}
-                  sx={{ objectFit: 'cover', borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
-                />
-              )}
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Box display="flex" alignItems="center" justifyContent="space-between">
-                  <Typography variant="h6" fontWeight={600} gutterBottom>{item.title}</Typography>
-                </Box>
-                <Typography variant="body2" color="text.secondary" mb={1}>{item.description}</Typography>
-                <Box display="flex" alignItems="center" gap={1} mb={1}>
-                  <Chip label={item.itemStatus} color={
-                    item.itemStatus === 'ACTIVE' ? 'success' :
-                      item.itemStatus === 'ENDED' ? 'warning' :
-                      item.itemStatus === 'SOLD' ? 'info' : 'default'
-                  } size="small" />
-                  <Typography variant="body2" color="text.secondary">Starting at <b>${item.startingPrice}</b></Typography>
-                </Box>
-                <Typography variant="caption" color="text.secondary">
-                  Category: {categories.find(c => c.id === item.categoryId)?.name || 'N/A'}
-                </Typography>
-              </CardContent>
-              <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
-                  {item.itemStatus === 'ACTIVE' && (
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="small"
-                  startIcon={<GavelIcon />}
-                    onClick={() => handleBidClick(item)}
-                  sx={{ borderRadius: 2 }}
-                >
-                      Bid Now
-                </Button>
-                  )}
-              </CardActions>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+        <Grid container spacing={3}>
+          {items.map((item) => {
+            // Log the item being processed
+            console.log('Processing item for rendering:', item);
+
+            // Basic validation - only skip if item is completely invalid
+            if (!item) {
+              console.warn('Null or undefined item found in items array');
+              return null;
+            }
+
+            // Use itemId instead of id
+            const itemKey = item.itemId || `item-${Math.random()}`;
+            
+            const currentBid = currentBids[item.itemId] || {
+              amount: item.currentHighestBid || item.startingPrice || 0,
+              bidderName: 'No bids yet'
+            };
+            
+            const isActive = item.itemStatus === 'ACTIVE';
+            const isSold = item.itemStatus === 'SOLD';
+            const isEnded = item.itemStatus === 'ENDED';
+            
+            return (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={itemKey}>
+                <Card sx={{ 
+                  position: 'relative', 
+                  height: '100%', 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  opacity: isActive ? 1 : 0.7
+                }}>
+                  {/* Status Badge */}
+                    <Chip 
+                    label={isActive ? 'Live' : isSold ? 'Sold' : 'Ended'} 
+                    color={isActive ? 'success' : isSold ? 'error' : 'warning'} 
+                      size="small" 
+                      sx={{ position: 'absolute', top: 10, left: 10, zIndex: 1 }}
+                    />
+                  
+                  <CardMedia
+                    component="img"
+                    height="180"
+                    image={item.imageUrl || 'https://via.placeholder.com/300'}
+                    alt={item.title || 'Item image'}
+                    sx={{ objectFit: 'cover' }}
+                  />
+                  
+                  <CardContent sx={{ flexGrow: 1 }}>
+                    <Typography variant="h6" component="div" noWrap>
+                      {item.title || 'Untitled Item'}
+                    </Typography>
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary" 
+                      sx={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        minHeight: '4.5em',
+                      }}
+                    >
+                      {item.description || 'No description available'}
+                    </Typography>
+                    
+                    <Box sx={{ mt: 2 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                        <Typography variant="subtitle2" color="text.secondary">
+                          {isActive ? 'Current Bid:' : isSold ? 'Sold for:' : 'Final Bid:'}
+                        </Typography>
+                        <Typography 
+                          variant="h6" 
+                          color={isActive ? 'primary' : isSold ? 'error' : 'text.secondary'} 
+                          fontWeight="bold"
+                        >
+                          ${currentBid.amount.toLocaleString()}
+                        </Typography>
+                      </Box>
+                      
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                        <Typography variant="subtitle2" color="text.secondary">
+                          Starting Price:
+                        </Typography>
+                        <Typography variant="body2">
+                          ${(item.startingPrice || 0).toLocaleString()}
+                        </Typography>
+                      </Box>
+                      
+                      <Typography variant="caption" color="text.secondary">
+                        Category: {item.categoryName || 'N/A'}
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                  
+                  <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2, mt: 'auto' }}>
+                    {isActive ? (
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        color="primary"
+                        size="small"
+                        startIcon={<GavelIcon />}
+                        onClick={() => {
+                          console.log('Bid button clicked for item:', item);
+                          handleBidClick(item);
+                        }}
+                        sx={{ borderRadius: 2 }}
+                      >
+                        Place Bid
+                      </Button>
+                    ) : (
+                      <Typography 
+                        variant="body2" 
+                        color={isSold ? 'error' : 'text.secondary'} 
+                        sx={{ fontStyle: 'italic' }}
+                      >
+                        {isSold ? 'Sold' : 'Auction Ended'}
+                      </Typography>
+                    )}
+                  </CardActions>
+                </Card>
+              </Grid>
+            );
+          })}
+        </Grid>
       )}
       <Box mt={4} display="flex" justifyContent="center">
         <DataTable
