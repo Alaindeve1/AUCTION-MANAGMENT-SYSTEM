@@ -24,6 +24,7 @@ const AdminUsersPage = () => {
       const res = await axios.get('/api/admin/users', {
         headers: { Authorization: `Bearer ${admin?.token}` }
       });
+      console.log('Users data received from backend:', res.data);
       setUsers(res.data || []);
     } catch (err) {
       setError('Failed to load users.');
@@ -66,8 +67,12 @@ const AdminUsersPage = () => {
   };
 
   const handleDeleteUser = async (userId) => {
-    if (!userId) return;
-    
+    console.log('Attempting to delete user with ID:', userId);
+    if (!userId) {
+      console.log('No userId provided for deletion.');
+      return;
+    }
+
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
         const response = await axios.delete(`http://localhost:8080/api/admin/users/${userId}`, {
@@ -78,7 +83,7 @@ const AdminUsersPage = () => {
         });
         
         if (response.status === 200) {
-          setUsers(prevUsers => prevUsers.filter(user => user.userId !== userId));
+          setUsers(prevUsers => prevUsers.filter(user => user?.id !== userId));
           setError(null);
           alert('User deleted successfully');
         } else {
@@ -161,7 +166,9 @@ const AdminUsersPage = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredUsers.map(user => (
+              {filteredUsers.map(user => {
+                console.log('Rendering user:', user);
+                return (
                 <tr key={user?.id || Math.random()} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-2">{user?.username || 'N/A'}</td>
                   <td className="px-4 py-2">{user?.email || 'N/A'}</td>
@@ -188,14 +195,15 @@ const AdminUsersPage = () => {
                       View
                     </button>
                     <button
-                      onClick={() => handleDeleteUser(user?.id)}
+                      onClick={() => handleDeleteUser(user?.userId)}
                       className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
                     >
                       Delete
                     </button>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
               {filteredUsers.length === 0 && (
                 <tr>
                   <td colSpan="6" className="text-center py-8 text-gray-500">

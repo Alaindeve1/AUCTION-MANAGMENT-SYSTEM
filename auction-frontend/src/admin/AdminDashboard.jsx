@@ -107,9 +107,9 @@ const AdminDashboard = () => {
             <span className="font-semibold text-lg text-indigo-800">AI Insights</span>
           </div>
           <ul className="space-y-2">
-            {aiInsights.length === 0 && <li className="text-gray-500">No insights at this time.</li>}
+            {aiInsights.length === 0 && <li key="no-insights" className="text-gray-500">No insights at this time.</li>}
             {aiInsights.map((insight, idx) => (
-              <li key={insight.id || insight.key || insight.title || idx} className="bg-white rounded px-3 py-2 shadow-sm text-gray-700">{insight}</li>
+              <li key={`insight-${idx}`} className="bg-white rounded px-3 py-2 shadow-sm text-gray-700">{insight}</li>
             ))}
           </ul>
         </div>
@@ -120,7 +120,7 @@ const AdminDashboard = () => {
         <div className="bg-white rounded-xl shadow p-6">
           <div className="font-semibold text-lg text-gray-700 mb-4">Recent Users</div>
           <ul className="divide-y divide-gray-100">
-            {recentUsers.length === 0 && <li className="text-gray-400">No recent users.</li>}
+            {recentUsers.length === 0 && <li key="no-recent-users" className="text-gray-400">No recent users.</li>}
             {recentUsers.map(u => (
               <li key={u.userId} className="py-2 flex flex-col">
                 <span className="font-medium text-gray-900">{u.username}</span>
@@ -132,7 +132,7 @@ const AdminDashboard = () => {
         <div className="bg-white rounded-xl shadow p-6">
           <div className="font-semibold text-lg text-gray-700 mb-4">Recent Auctions</div>
           <ul className="divide-y divide-gray-100">
-            {recentResults.length === 0 && <li className="text-gray-400">No recent auctions.</li>}
+            {recentResults.length === 0 && <li key="no-recent-auctions" className="text-gray-400">No recent auctions.</li>}
             {recentResults.map(r => (
               <li key={r.resultId || r.itemId} className="py-2 flex flex-col">
                 <span className="font-medium text-gray-900">{r.itemTitle || r.itemId}</span>
