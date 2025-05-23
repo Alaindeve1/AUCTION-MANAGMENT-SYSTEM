@@ -25,10 +25,11 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import api from '../utils/api';
-import { jwtDecode } from 'jwt-decode';
+import { useAuth } from '../utils/auth';
 import toast from 'react-hot-toast';
 
 const Notification = () => {
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -58,7 +59,7 @@ const Notification = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [user]);
 
   const fetchNotifications = async () => {
     setLoading(true);
@@ -68,16 +69,12 @@ const Notification = () => {
       const generalRes = await api.get('/notifications/general');
       console.log('General notifications:', generalRes.data);
 
-      // Get user ID from JWT token
-      const token = localStorage.getItem('token');
       let userNotifications = [];
       
-      if (token) {
+      if (user && user.id) {
         try {
-          const decodedToken = jwtDecode(token);
-          const userId = decodedToken.id;
-          console.log('Fetching user notifications for ID:', userId);
-          const userRes = await api.get(`/notifications/user/${userId}`);
+          console.log('Fetching user notifications for ID:', user.id);
+          const userRes = await api.get(`/notifications/user/${user.id}`);
           userNotifications = userRes.data || [];
           console.log('User notifications:', userNotifications);
         } catch (userErr) {
