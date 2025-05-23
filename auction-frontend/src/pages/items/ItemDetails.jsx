@@ -144,11 +144,19 @@ const ItemDetails = () => {
         <Grid item xs={12} md={6}>
           <Card>
             <CardMedia
-                component="img"
+              component="img"
               height="400"
-              image={item.imageUrl || 'https://via.placeholder.com/600x400'}
-                alt={item.title}
-              sx={{ objectFit: 'cover' }}
+              image={item.imageUrl ? `http://localhost:8080${item.imageUrl}` : 'https://via.placeholder.com/600x400?text=No+Image'}
+              alt={item.title}
+              sx={{ 
+                objectFit: 'cover',
+                height: '400px',
+                width: '100%'
+              }}
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'https://via.placeholder.com/600x400?text=No+Image';
+              }}
             />
           </Card>
         </Grid>

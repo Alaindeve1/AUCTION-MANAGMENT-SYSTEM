@@ -26,19 +26,20 @@ const Layout = () => {
           component="main"
           sx={{
             flexGrow: 1,
-            ml: { sm: '240px' }, // Sidebar width
-            width: { sm: `calc(100% - 240px)` },
+            ml: { xs: 0, sm: '240px' }, // Sidebar width
+            width: { xs: '100%', sm: `calc(100% - 240px)` },
             minHeight: 'calc(100vh - 64px)', // Subtract navbar height
             backgroundColor: 'background.default',
             display: 'flex',
-            flexDirection: 'column'
+            flexDirection: 'column',
+            pt: { xs: '56px', sm: '64px' } // Approximate AppBar height
           }}
         >
           <Box sx={{ 
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            p: 3 // Add padding for content
+            p: { xs: 1, sm: 2, md: 3 } // Responsive padding
           }}>
             <Outlet />
           </Box>

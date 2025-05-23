@@ -58,6 +58,9 @@ public class ItemController {
     @GetMapping("/status/{status}")
     public ResponseEntity<List<ItemDto>> getItemsByStatus(@PathVariable Item.ItemStatus status) {
         List<Item> items = itemService.getItemsByStatus(status);
+        
+        System.out.println("ItemController getItemsByStatus - fetched " + items.size() + " items.");
+
         List<ItemDto> itemDtos = items.stream()
                 .map(ItemDto::fromEntity)
                 .collect(Collectors.toList());

@@ -62,6 +62,9 @@ public class ItemDto {
         dto.setDescription(item.getDescription());
         dto.setImageUrl(item.getImageUrl());
         
+        // Add this console log:
+        System.out.println("ItemDto fromEntity - imageUrl: " + item.getImageUrl());
+        
         // Calculate current highest bid and bid count
         if (item.getBids() != null && !item.getBids().isEmpty()) {
             Optional<Bid> highestBid = item.getBids().stream()

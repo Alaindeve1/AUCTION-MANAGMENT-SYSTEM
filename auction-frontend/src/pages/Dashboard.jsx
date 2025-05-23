@@ -32,7 +32,17 @@ const RatingCard = ({ rating, title, description }) => (
 
 const PartnerLogo = ({ name, logo }) => (
   <div className="flex items-center justify-center p-4 bg-white rounded-lg shadow hover:shadow-lg transition-all duration-300">
-    <img src={logo} alt={name} className="h-12 object-contain" />
+    <div className="relative w-full h-24">
+      <img 
+        src={logo || 'https://via.placeholder.com/300x100?text=Partner+Logo'} 
+        alt={name} 
+        className="h-full w-full object-contain"
+        onError={(e) => {
+          e.target.onerror = null;
+          e.target.src = 'https://via.placeholder.com/300x100?text=Partner+Logo';
+        }}
+      />
+    </div>
   </div>
 );
 
@@ -144,9 +154,17 @@ const Dashboard = () => {
               ) : (
                 activeAuctions.slice(0, 6).map(auction => (
                   <div key={auction.itemId} className="border rounded-lg p-4 hover:shadow-md transition">
-                    {auction.imageUrl && (
-                      <img src={auction.imageUrl} alt={auction.title} className="w-full h-40 object-cover rounded-lg mb-3" />
-                    )}
+                    <div className="relative w-full h-40 mb-3">
+                      <img 
+                        src={auction.imageUrl ? `http://localhost:8080${auction.imageUrl}` : 'https://via.placeholder.com/400x300?text=No+Image'} 
+                        alt={auction.title} 
+                        className="w-full h-full object-cover rounded-lg"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'https://via.placeholder.com/400x300?text=No+Image';
+                        }}
+                      />
+                    </div>
                     <h3 className="font-semibold text-gray-900 mb-1">{auction.title}</h3>
                     <p className="text-sm text-gray-500 mb-2">Starting at ${auction.startingPrice}</p>
                     <a href={`/items/${auction.itemId}`} className="text-indigo-600 hover:text-indigo-800 text-sm font-medium">View Details →</a>
@@ -188,11 +206,11 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto">
           <PartnerLogo 
             name="THE FOX COMPANY Ltd" 
-            logo="https://via.placeholder.com/300x100?text=THE+FOX+COMPANY+Ltd" 
+            logo="https://img.freepik.com/free-vector/fox-logo-design-vector-illustration_460848-15078.jpg" 
           />
           <PartnerLogo 
             name="Spears Company" 
-            logo="https://via.placeholder.com/300x100?text=Spears+Company" 
+            logo="https://img.freepik.com/free-vector/spear-logo-template_23-2149431958.jpg" 
           />
         </div>
       </div>
@@ -208,9 +226,17 @@ const Dashboard = () => {
           ) : (
             wins.map(win => (
               <div key={win.resultId} className="border rounded-lg p-4 hover:shadow-md transition">
-                {win.itemImageUrl && (
-                  <img src={win.itemImageUrl} alt={win.itemTitle} className="w-full h-40 object-cover rounded-lg mb-3" />
-                )}
+                <div className="relative w-full h-40 mb-3">
+                  <img 
+                    src={win.itemImageUrl ? `http://localhost:8080${win.itemImageUrl}` : 'https://via.placeholder.com/400x300?text=No+Image'} 
+                    alt={win.itemTitle} 
+                    className="w-full h-full object-cover rounded-lg"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'https://via.placeholder.com/400x300?text=No+Image';
+                    }}
+                  />
+                </div>
                 <h3 className="font-semibold text-gray-900 mb-1">{win.itemTitle}</h3>
                 <p className="text-sm text-gray-500 mb-2">Final Price: ${win.finalPrice}</p>
                 <p className="text-xs text-gray-400 mb-2">Ended: {win.endDate ? new Date(win.endDate).toLocaleDateString() : '-'}</p>

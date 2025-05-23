@@ -87,6 +87,8 @@ const Items = () => {
     try {
       setLoading(true);
       console.log('Fetching items with status:', statusTab);
+      
+      console.log('Attempting to fetch items from backend endpoint:', `/items/status/${statusTab}`);
 
       const response = await api.get(`/items/status/${statusTab}`);
       console.log('Raw API Response:', response);
@@ -471,7 +473,7 @@ const Items = () => {
                   <CardMedia
                     component="img"
                     height="180"
-                    image={item.imageUrl || 'https://via.placeholder.com/300'}
+                    image={item.imageUrl ? `http://localhost:8080${item.imageUrl}` : 'https://via.placeholder.com/300'}
                     alt={item.title || 'Item image'}
                     sx={{ objectFit: 'cover' }}
                   />

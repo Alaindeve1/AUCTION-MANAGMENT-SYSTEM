@@ -68,7 +68,7 @@ public class AuthController {
             String resetToken = jwtService.generateToken(user);
             
             // Send email with reset link
-            String resetLink = "http://localhost:3001/reset-password?token=" + resetToken;
+            String resetLink = "http://localhost:3000/reset-password?token=" + resetToken;
             emailService.sendPasswordResetEmail(user.getEmail(), resetLink);
             
             return ResponseEntity.ok().body(Map.of("message", "Password reset instructions sent to your email"));

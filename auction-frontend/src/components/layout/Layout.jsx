@@ -110,7 +110,12 @@ const Layout = () => {
       </AppBar>
       <Box
         component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+        sx={{
+          width: { sm: drawerWidth },
+          flexShrink: { sm: 0 },
+          mt: { xs: 7, sm: 8 }
+        }}
+        aria-label="mailbox folders"
       >
         <Drawer
           variant={isMobile ? 'temporary' : 'permanent'}
@@ -133,11 +138,11 @@ const Layout = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
+          pt: { xs: 7, sm: 8 },
+          pl: { sm: `${drawerWidth}px` },
           width: { sm: `calc(100% - ${drawerWidth}px)` },
         }}
       >
-        <Toolbar />
         <Outlet />
       </Box>
     </Box>

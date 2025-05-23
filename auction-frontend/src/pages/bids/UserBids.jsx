@@ -114,7 +114,7 @@ const UserBids = () => {
                     {/* Item Info */}
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                       <Avatar
-                        src={bid.itemImageUrl}
+                        src={bid.itemImageUrl ? `http://localhost:8080${bid.itemImageUrl}` : ''}
                         alt={bid.itemTitle}
                         variant="rounded"
                         sx={{ width: { xs: 50, sm: 60 }, height: { xs: 50, sm: 60 } }}

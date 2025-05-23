@@ -70,19 +70,23 @@ const AdminUsersPage = () => {
     
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
-        const response = await axios.delete(`/api/admin/users/${userId}`, {
-          headers: { Authorization: `Bearer ${admin?.token}` }
+        const response = await axios.delete(`http://localhost:8080/api/admin/users/${userId}`, {
+          headers: { 
+            Authorization: `Bearer ${admin?.token}`,
+            'Content-Type': 'application/json'
+          }
         });
         
         if (response.status === 200) {
-          setUsers(users.filter(user => user?.userId !== userId));
+          setUsers(prevUsers => prevUsers.filter(user => user.userId !== userId));
           setError(null);
+          alert('User deleted successfully');
         } else {
           setError('Failed to delete user. Please try again.');
         }
       } catch (err) {
         console.error('Failed to delete user:', err);
-        setError('Failed to delete user. Please try again.');
+        setError(err.response?.data?.message || 'Failed to delete user. Please try again.');
       }
     }
   };
@@ -112,6 +116,11 @@ const AdminUsersPage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {error && (
+        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+          {error}
+        </div>
+      )}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-indigo-700">User Management</h1>
         <div className="flex gap-4">

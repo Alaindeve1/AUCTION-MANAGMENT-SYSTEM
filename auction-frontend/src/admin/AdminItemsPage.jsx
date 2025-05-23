@@ -151,6 +151,8 @@ const AdminItemsPage = () => {
         endDate: form.endDate ? new Date(form.endDate).toISOString() : undefined
       };
 
+      console.log('Saving item with imageUrl:', payload.imageUrl);
+
       if (editItem) {
         // Edit
         await axios.put(`/api/items/${editItem.itemId}`, payload, {
@@ -201,7 +203,7 @@ const AdminItemsPage = () => {
               <div>
                 <div className="relative h-40 mb-4">
                   {item.imageUrl ? (
-                    <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover rounded-xl" />
+                    <img src={item.imageUrl ? `http://localhost:8080${item.imageUrl}` : ''} alt={item.title} className="w-full h-full object-cover rounded-xl" />
                   ) : (
                     <div className="w-full h-full bg-gray-200 rounded-xl flex items-center justify-center">
                       <span className="text-gray-400">No image</span>

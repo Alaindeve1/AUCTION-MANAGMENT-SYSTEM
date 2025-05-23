@@ -36,13 +36,14 @@ const Sidebar = () => {
   return (
     <Box
       sx={{
-        width: isMobile ? '100%' : 240,
+        width: { xs: '100%', sm: 240 },
         flexShrink: 0,
-        borderRight: '1px solid',
+        borderRight: { xs: 'none', sm: '1px solid' },
         borderColor: 'divider',
-        height: '100vh',
-        position: isMobile ? 'relative' : 'fixed',
-        backgroundColor: 'background.paper'
+        height: { xs: 'auto', sm: '100vh' },
+        position: { xs: 'relative', sm: 'fixed' },
+        backgroundColor: 'background.paper',
+        display: { xs: 'none', sm: 'block' }
       }}
     >
       <List>
