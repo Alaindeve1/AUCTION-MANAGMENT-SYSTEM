@@ -139,19 +139,11 @@ public class BidService {
     }
 
     public List<UserBidDTO> getUserBids() {
-        // For testing purposes, use a default user
-        User currentUser = userRepository.findByUsername("testuser")
-                .orElseGet(() -> {
-                    // If test user doesn't exist, create one
-                    User newUser = new User();
-                    newUser.setUsername("testuser");
-                    newUser.setEmail("test@example.com");
-                    newUser.setPasswordHash("$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG"); // password: password
-                    newUser.setRole(User.UserRole.USER);
-                    return userRepository.save(newUser);
-                });
+        // Use a default user ID (1) for testing
+        User currentUser = userRepository.findById(1L)
+                .orElseThrow(() -> new ResourceNotFoundException("Default user not found"));
 
-        // Get all bids for the current user
+        // Get all bids for the default user
         List<Bid> userBids = bidRepository.findByBidderUserIdOrderByBidTimeDesc(currentUser.getUserId());
 
         return userBids.stream().map(bid -> {

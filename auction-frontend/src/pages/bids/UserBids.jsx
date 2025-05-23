@@ -22,7 +22,7 @@ import {
   Gavel as GavelIcon,
   ArrowForward as ArrowForwardIcon,
 } from '@mui/icons-material';
-import api from '../../utils/auth';
+import api from '../../utils/api';
 import toast from 'react-hot-toast';
 
 const UserBids = () => {
@@ -39,19 +39,14 @@ const UserBids = () => {
         setBids(response.data);
       } catch (error) {
         console.error('Error fetching user bids:', error);
-        if (error.response?.status === 401) {
-          toast.error('Please log in to view your bids');
-          navigate('/login');
-        } else {
-          toast.error('Failed to fetch your bids');
-        }
+        toast.error('Failed to fetch bids');
       } finally {
         setLoading(false);
       }
     };
 
     fetchUserBids();
-  }, [navigate]);
+  }, []);
 
   const getBidStatus = (bid) => {
     if (bid.isHighestBid) {
@@ -87,106 +82,113 @@ const UserBids = () => {
   }
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto' }}>
-      <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 4, fontWeight: 'bold' }}>
+    <Box sx={{ p: { xs: 1, sm: 2 }, maxWidth: 1200, mx: 'auto' }}>
+      <Typography 
+        variant="h4" 
+        component="h1" 
+        gutterBottom 
+        sx={{ 
+          mb: { xs: 1, sm: 2 }, 
+          fontSize: { xs: '1.5rem', sm: '2rem' },
+          textAlign: { xs: 'center', sm: 'left' }
+        }}
+      >
         My Bids
       </Typography>
 
       {bids.length === 0 ? (
-        <Paper sx={{ p: 4, textAlign: 'center', bgcolor: 'background.default' }}>
-          <GavelIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
+        <Paper sx={{ p: { xs: 2, sm: 3 }, textAlign: 'center' }}>
+          <GavelIcon sx={{ fontSize: { xs: 40, sm: 60 }, color: 'text.secondary', mb: 1 }} />
           <Typography variant="h6" color="text.secondary">
             You haven't placed any bids yet
           </Typography>
         </Paper>
       ) : (
-        <Grid container spacing={3}>
+        <Grid container spacing={1}>
           {bids.map((bid) => {
             const status = getBidStatus(bid);
             return (
               <Grid item xs={12} key={bid.bidId}>
-                <Card 
-                  sx={{ 
-                    transition: 'transform 0.2s, box-shadow 0.2s',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: theme.shadows[4],
-                    },
-                  }}
-                >
-                  <CardContent>
-                    <Grid container spacing={2} alignItems="center">
-                      <Grid item xs={12} sm={3}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <Avatar
-                            src={bid.itemImageUrl}
-                            alt={bid.itemTitle}
-                            variant="rounded"
-                            sx={{ width: 80, height: 80 }}
-                          />
-                          <Box>
-                            <Typography variant="h6" noWrap>
-                              {bid.itemTitle}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              Item ID: {bid.itemId}
-                            </Typography>
-                          </Box>
-                        </Box>
+                <Card sx={{ mb: 1 }}>
+                  <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
+                    {/* Item Info */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <Avatar
+                        src={bid.itemImageUrl}
+                        alt={bid.itemTitle}
+                        variant="rounded"
+                        sx={{ width: { xs: 50, sm: 60 }, height: { xs: 50, sm: 60 } }}
+                      />
+                      <Box sx={{ ml: 1, flex: 1 }}>
+                        <Typography variant="subtitle1" noWrap>
+                          {bid.itemTitle}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          ID: {bid.itemId}
+                        </Typography>
+                      </Box>
+                    </Box>
+
+                    <Divider sx={{ my: 1 }} />
+
+                    {/* Bid Details */}
+                    <Grid container spacing={1}>
+                      <Grid item xs={6}>
+                        <Typography variant="body2" color="text.secondary">
+                          Your Bid
+                        </Typography>
+                        <Typography variant="h6" color="primary">
+                          ${bid.amount.toLocaleString()}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {formatDate(bid.bidDate)}
+                        </Typography>
                       </Grid>
 
-                      <Grid item xs={12} sm={3}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                          <Typography variant="subtitle2" color="text.secondary">
-                            Your Bid
-                          </Typography>
-                          <Typography variant="h6" color="primary" fontWeight="bold">
-                            ${bid.amount.toLocaleString()}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            Placed on {formatDate(bid.bidDate)}
-                          </Typography>
-                        </Box>
-                      </Grid>
-
-                      <Grid item xs={12} sm={3}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                          <Typography variant="subtitle2" color="text.secondary">
-                            Current Highest Bid
-                          </Typography>
-                          <Typography variant="h6" color="primary" fontWeight="bold">
-                            ${bid.currentHighestBid.toLocaleString()}
-                          </Typography>
-                          {bid.isHighestBid && (
-                            <Chip
-                              icon={<TrendingUpIcon />}
-                              label="You're winning!"
-                              color="success"
-                              size="small"
-                            />
-                          )}
-                        </Box>
-                      </Grid>
-
-                      <Grid item xs={12} sm={2}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center' }}>
+                      <Grid item xs={6}>
+                        <Typography variant="body2" color="text.secondary">
+                          Highest Bid
+                        </Typography>
+                        <Typography variant="h6" color="primary">
+                          ${bid.currentHighestBid.toLocaleString()}
+                        </Typography>
+                        {bid.isHighestBid && (
                           <Chip
-                            icon={status.icon}
-                            label={status.label}
-                            color={status.color}
-                            sx={{ mb: 1 }}
+                            icon={<TrendingUpIcon />}
+                            label="Winning"
+                            color="success"
+                            size="small"
+                            sx={{ mt: 0.5 }}
                           />
-                          <Tooltip title="View Item">
-                            <IconButton
-                              color="primary"
-                              onClick={() => navigate(`/items/${bid.itemId}`)}
-                            >
-                              <ArrowForwardIcon />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
+                        )}
                       </Grid>
                     </Grid>
+
+                    <Divider sx={{ my: 1 }} />
+
+                    {/* Status and Action */}
+                    <Box sx={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      mt: 1
+                    }}>
+                      <Chip
+                        icon={status.icon}
+                        label={status.label}
+                        color={status.color}
+                        size="small"
+                      />
+                      <Tooltip title="View Item">
+                        <IconButton
+                          color="primary"
+                          onClick={() => navigate(`/items/${bid.itemId}`)}
+                          size="small"
+                        >
+                          <ArrowForwardIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
                   </CardContent>
                 </Card>
               </Grid>

@@ -108,36 +108,66 @@ const Help = () => {
   return (
     <Fade in timeout={800}>
       <Box sx={{ 
-        ml: { sm: '240px' },
-        width: { sm: `calc(100% - 240px)` },
+        ml: { xs: 0, sm: '240px' },
+        width: { xs: '100%', sm: `calc(100% - 240px)` },
         minHeight: '100vh',
         backgroundColor: 'background.default',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        overflow: 'hidden'
       }}>
-        <Container maxWidth="lg" sx={{ 
-          py: 4,
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 4
-        }}>
+        <Container 
+          maxWidth="lg" 
+          sx={{ 
+            py: { xs: 1, sm: 2, md: 3 },
+            px: { xs: 1, sm: 2 },
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: { xs: 1.5, sm: 2, md: 3 },
+            overflow: 'auto'
+          }}
+        >
           {/* Header Section */}
-          <Box textAlign="center">
-            <Typography variant="h3" fontWeight={700} color="primary.main" gutterBottom>
+          <Box textAlign="center" sx={{ mb: { xs: 1, sm: 2 } }}>
+            <Typography 
+              variant="h3" 
+              fontWeight={700} 
+              color="primary.main" 
+              gutterBottom
+              sx={{
+                fontSize: { xs: '1.5rem', sm: '2rem', md: '2.25rem' },
+                lineHeight: 1.2
+              }}
+            >
               Help & Support
             </Typography>
-            <Typography variant="h6" color="text.secondary">
+            <Typography 
+              variant="h6" 
+              color="text.secondary"
+              sx={{
+                fontSize: { xs: '0.875rem', sm: '1rem', md: '1.125rem' },
+                lineHeight: 1.4
+              }}
+            >
               We're here to help you with any questions or concerns
             </Typography>
           </Box>
 
           {/* Support Topics Grid */}
           <Box>
-            <Typography variant="h4" fontWeight={600} mb={4} color="primary.main">
+            <Typography 
+              variant="h4" 
+              fontWeight={600} 
+              mb={{ xs: 2, sm: 3, md: 4 }} 
+              color="primary.main"
+              sx={{
+                fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' }
+              }}
+            >
               How can we help you?
             </Typography>
-            <Grid container spacing={3}>
+            <Grid container spacing={{ xs: 2, sm: 3 }}>
               {supportTopics.map((topic, index) => (
                 <Grid item xs={12} sm={6} md={3} key={index}>
                   <Card 
@@ -145,27 +175,44 @@ const Help = () => {
                       height: '100%',
                       transition: 'all 0.3s ease',
                       '&:hover': {
-                        transform: 'translateY(-8px)',
-                        boxShadow: 6,
+                        transform: { xs: 'none', sm: 'translateY(-8px)' },
+                        boxShadow: { xs: 1, sm: 6 },
                         '& .MuiSvgIcon-root': {
-                          transform: 'scale(1.1)',
+                          transform: { xs: 'none', sm: 'scale(1.1)' },
                         }
                       }
                     }}
                   >
-                    <CardContent sx={{ textAlign: 'center', p: 4 }}>
+                    <CardContent sx={{ 
+                      textAlign: 'center', 
+                      p: { xs: 2, sm: 3, md: 4 } 
+                    }}>
                       <Box sx={{ 
-                        mb: 2,
+                        mb: { xs: 1, sm: 2 },
                         '& .MuiSvgIcon-root': {
+                          fontSize: { xs: 32, sm: 40 },
                           transition: 'transform 0.3s ease'
                         }
                       }}>
                         {topic.icon}
                       </Box>
-                      <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+                      <Typography 
+                        variant="h6" 
+                        sx={{ 
+                          mb: { xs: 0.5, sm: 1 }, 
+                          fontWeight: 600,
+                          fontSize: { xs: '1rem', sm: '1.25rem' }
+                        }}
+                      >
                         {topic.title}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography 
+                        variant="body2" 
+                        color="text.secondary"
+                        sx={{
+                          fontSize: { xs: '0.875rem', sm: '1rem' }
+                        }}
+                      >
                         {topic.description}
                       </Typography>
                     </CardContent>
@@ -177,7 +224,15 @@ const Help = () => {
 
           {/* FAQs Section */}
           <Box>
-            <Typography variant="h4" fontWeight={600} mb={4} color="primary.main">
+            <Typography 
+              variant="h4" 
+              fontWeight={600} 
+              mb={{ xs: 2, sm: 3, md: 4 }} 
+              color="primary.main"
+              sx={{
+                fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' }
+              }}
+            >
               Frequently Asked Questions
             </Typography>
             <Paper elevation={0} sx={{ borderRadius: 2, overflow: 'hidden' }}>
@@ -201,13 +256,28 @@ const Help = () => {
                     sx={{
                       '&:hover': {
                         backgroundColor: 'action.hover'
-                      }
+                      },
+                      px: { xs: 1, sm: 2 }
                     }}
                   >
-                    <Typography fontWeight={500}>{faq.question}</Typography>
+                    <Typography 
+                      fontWeight={500}
+                      sx={{
+                        fontSize: { xs: '0.875rem', sm: '1rem' }
+                      }}
+                    >
+                      {faq.question}
+                    </Typography>
                   </AccordionSummary>
-                  <AccordionDetails>
-                    <Typography color="text.secondary">{faq.answer}</Typography>
+                  <AccordionDetails sx={{ px: { xs: 1, sm: 2 } }}>
+                    <Typography 
+                      color="text.secondary"
+                      sx={{
+                        fontSize: { xs: '0.875rem', sm: '1rem' }
+                      }}
+                    >
+                      {faq.answer}
+                    </Typography>
                   </AccordionDetails>
                 </Accordion>
               ))}
@@ -215,41 +285,82 @@ const Help = () => {
           </Box>
 
           {/* Contact Section */}
-          <Box mb={4}>
-            <Typography variant="h4" fontWeight={600} mb={4} color="primary.main">
+          <Box mb={{ xs: 2, sm: 3, md: 4 }}>
+            <Typography 
+              variant="h4" 
+              fontWeight={600} 
+              mb={{ xs: 2, sm: 3, md: 4 }} 
+              color="primary.main"
+              sx={{
+                fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' }
+              }}
+            >
               Contact Us
             </Typography>
-            <Grid container spacing={4}>
+            <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
               <Grid item xs={12} md={5}>
                 <Paper 
                   elevation={3} 
                   sx={{ 
-                    p: 4, 
+                    p: { xs: 2, sm: 3, md: 4 }, 
                     height: '100%',
                     borderRadius: 2,
                     backgroundColor: 'primary.light',
                     color: 'primary.contrastText'
                   }}
                 >
-                  <Typography variant="h5" fontWeight={600} mb={3}>
+                  <Typography 
+                    variant="h5" 
+                    fontWeight={600} 
+                    mb={{ xs: 2, sm: 3 }}
+                    sx={{
+                      fontSize: { xs: '1.25rem', sm: '1.5rem' }
+                    }}
+                  >
                     Get in Touch
                   </Typography>
-                  <Box sx={{ mb: 4 }}>
-                    <Box display="flex" alignItems="center" mb={3}>
-                      <EmailIcon sx={{ mr: 2, fontSize: 28 }} />
-                      <Typography variant="body1">support@auctionhub.com</Typography>
+                  <Box sx={{ mb: { xs: 2, sm: 3, md: 4 } }}>
+                    <Box display="flex" alignItems="center" mb={{ xs: 2, sm: 3 }}>
+                      <EmailIcon sx={{ mr: 2, fontSize: { xs: 24, sm: 28 } }} />
+                      <Typography 
+                        variant="body1"
+                        sx={{
+                          fontSize: { xs: '0.875rem', sm: '1rem' }
+                        }}
+                      >
+                        support@auctionhub.com
+                      </Typography>
                     </Box>
-                    <Box display="flex" alignItems="center" mb={3}>
-                      <PhoneIcon sx={{ mr: 2, fontSize: 28 }} />
-                      <Typography variant="body1">+1 (555) 123-4567</Typography>
+                    <Box display="flex" alignItems="center" mb={{ xs: 2, sm: 3 }}>
+                      <PhoneIcon sx={{ mr: 2, fontSize: { xs: 24, sm: 28 } }} />
+                      <Typography 
+                        variant="body1"
+                        sx={{
+                          fontSize: { xs: '0.875rem', sm: '1rem' }
+                        }}
+                      >
+                        +1 (555) 123-4567
+                      </Typography>
                     </Box>
                     <Box display="flex" alignItems="center">
-                      <LocationIcon sx={{ mr: 2, fontSize: 28 }} />
-                      <Typography variant="body1">123 Auction Street, City, Country</Typography>
+                      <LocationIcon sx={{ mr: 2, fontSize: { xs: 24, sm: 28 } }} />
+                      <Typography 
+                        variant="body1"
+                        sx={{
+                          fontSize: { xs: '0.875rem', sm: '1rem' }
+                        }}
+                      >
+                        123 Auction Street, City, Country
+                      </Typography>
                     </Box>
                   </Box>
-                  <Divider sx={{ my: 3, borderColor: 'rgba(255, 255, 255, 0.2)' }} />
-                  <Typography variant="body2">
+                  <Divider sx={{ my: { xs: 2, sm: 3 }, borderColor: 'rgba(255, 255, 255, 0.2)' }} />
+                  <Typography 
+                    variant="body2"
+                    sx={{
+                      fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                    }}
+                  >
                     Our support team is available Monday through Friday, 9:00 AM to 6:00 PM EST.
                   </Typography>
                 </Paper>
@@ -258,23 +369,30 @@ const Help = () => {
                 <Paper 
                   elevation={3} 
                   sx={{ 
-                    p: 4,
+                    p: { xs: 2, sm: 3, md: 4 },
                     borderRadius: 2,
                     height: '100%'
                   }}
                 >
-                  <Typography variant="h5" fontWeight={600} mb={3} color="primary.main">
+                  <Typography 
+                    variant="h5" 
+                    fontWeight={600} 
+                    mb={{ xs: 2, sm: 3 }} 
+                    color="primary.main"
+                    sx={{
+                      fontSize: { xs: '1.25rem', sm: '1.5rem' }
+                    }}
+                  >
                     Send us a Message
                   </Typography>
                   <form 
                     action="https://formspree.io/f/xeogdzry" 
                     method="POST"
                     onSubmit={(e) => {
-                      // Keep the form submission handling for UI feedback
                       handleContactSubmit(e);
                     }}
                   >
-                    <Grid container spacing={3}>
+                    <Grid container spacing={{ xs: 2, sm: 3 }}>
                       <Grid item xs={12} sm={6}>
                         <TextField
                           fullWidth
@@ -284,6 +402,7 @@ const Help = () => {
                           onChange={handleContactChange}
                           required
                           variant="outlined"
+                          size={isMobile ? "small" : "medium"}
                         />
                       </Grid>
                       <Grid item xs={12} sm={6}>
@@ -296,6 +415,7 @@ const Help = () => {
                           onChange={handleContactChange}
                           required
                           variant="outlined"
+                          size={isMobile ? "small" : "medium"}
                         />
                       </Grid>
                       <Grid item xs={12}>
@@ -307,6 +427,7 @@ const Help = () => {
                           onChange={handleContactChange}
                           required
                           variant="outlined"
+                          size={isMobile ? "small" : "medium"}
                         />
                       </Grid>
                       <Grid item xs={12}>
@@ -315,11 +436,12 @@ const Help = () => {
                           label="Message"
                           name="message"
                           multiline
-                          rows={4}
+                          rows={isMobile ? 3 : 4}
                           value={contactForm.message}
                           onChange={handleContactChange}
                           required
                           variant="outlined"
+                          size={isMobile ? "small" : "medium"}
                         />
                       </Grid>
                       <Grid item xs={12}>
@@ -327,13 +449,13 @@ const Help = () => {
                           type="submit"
                           variant="contained"
                           color="primary"
-                          size="large"
+                          size={isMobile ? "medium" : "large"}
                           startIcon={<SendIcon />}
                           fullWidth
                           sx={{ 
-                            py: 1.5,
+                            py: { xs: 1, sm: 1.5 },
                             textTransform: 'none',
-                            fontSize: '1.1rem'
+                            fontSize: { xs: '1rem', sm: '1.1rem' }
                           }}
                         >
                           Send Message
