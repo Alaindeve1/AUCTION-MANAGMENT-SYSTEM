@@ -42,7 +42,7 @@ const Layout = () => {
             display: 'flex',
             flexDirection: 'column',
             // Keep padding for content within the main area, adjust as needed
-            p: { xs: 1, sm: 2, md: 3 }
+            p: { xs: 1, sm: 1.5, md: 2 }
           }}
         >
           {/* Inner box for padding and flex content */}

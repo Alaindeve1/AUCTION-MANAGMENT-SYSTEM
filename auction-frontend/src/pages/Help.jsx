@@ -328,7 +328,7 @@ const Help = () => {
                           fontSize: { xs: '0.875rem', sm: '1rem' }
                         }}
                       >
-                        support@auctionhub.com
+                        support@gmail.com
                       </Typography>
                     </Box>
                     <Box display="flex" alignItems="center" mb={{ xs: 2, sm: 3 }}>
@@ -339,7 +339,7 @@ const Help = () => {
                           fontSize: { xs: '0.875rem', sm: '1rem' }
                         }}
                       >
-                        +1 (555) 123-4567
+                        +250 799324850
                       </Typography>
                     </Box>
                     <Box display="flex" alignItems="center">

@@ -140,7 +140,7 @@ const LandingPage = () => {
 
           <div className="mt-12 text-center">
             <Link
-              to="/items"
+              to="/login"
               className="inline-flex items-center px-6 py-3 text-base font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700"
             >
               View All Items

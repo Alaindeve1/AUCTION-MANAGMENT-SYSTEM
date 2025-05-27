@@ -1,9 +1,13 @@
 package com.auction.controller;
 
 import com.auction.dto.AdminLoginRequest;
+import com.auction.dto.TwoFactorVerificationRequest;
 import com.auction.model.User;
 import com.auction.repository.UserRepository;
+import com.auction.service.AdminService;
 import com.auction.service.JwtService;
+import com.auction.service.TwoFactorAuthService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -12,13 +16,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/admin")
-@CrossOrigin(origins = "http://localhost:3000", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+@RequestMapping("/api/admin/auth")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"})
 public class AdminAuthController {
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+
+    @Autowired
+    private AdminService adminService;
+
+    @Autowired
+    private TwoFactorAuthService twoFactorAuthService;
 
     public AdminAuthController(
             UserRepository userRepository,
@@ -30,38 +40,60 @@ public class AdminAuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> adminLogin(@RequestBody AdminLoginRequest request) {
+    public ResponseEntity<?> login(@RequestBody AdminLoginRequest request) {
         try {
-            User user = userRepository.findByUsername(request.getUsername())
-                    .orElseThrow(() -> new RuntimeException("Invalid credentials"));
-                    
-            if (user.getRole() != User.UserRole.ADMIN) {
-                return ResponseEntity.status(403).body("Not authorized as admin");
+            // First step: Verify username and password
+            if (adminService.validateCredentials(request.getUsername(), request.getPassword())) {
+                // Generate 2FA secret if not exists
+                String secretKey = adminService.getOrCreateTwoFactorSecret(request.getUsername());
+                // Generate QR code URL
+                String qrCodeUrl = twoFactorAuthService.generateQRCodeUrl(secretKey, request.getUsername());
+                
+                Map<String, Object> response = new HashMap<>();
+                response.put("requiresTwoFactor", true);
+                response.put("qrCodeUrl", qrCodeUrl);
+                response.put("username", request.getUsername());
+                
+                return ResponseEntity.ok(response);
             }
-            
-            if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-                Map<String, String> error = new HashMap<>();
-                error.put("message", "Invalid credentials");
-                return ResponseEntity.status(401).body(error);
-            }
-            
-            String token = jwtService.generateToken(user);
-            Map<String, Object> response = new HashMap<>();
-            response.put("token", token);
-            response.put("username", user.getUsername());
-            response.put("role", user.getRole());
-            response.put("email", user.getEmail());
-            
-            return ResponseEntity.ok(response);
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid credentials"));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/verify-2fa")
+    public ResponseEntity<?> verifyTwoFactor(@RequestBody TwoFactorVerificationRequest request) {
+        try {
+            String secretKey = adminService.getTwoFactorSecret(request.getUsername());
+            if (secretKey == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "2FA not set up for this user"));
+            }
+
+            if (twoFactorAuthService.verifyCode(secretKey, request.getCode())) {
+                // Generate JWT token and return it
+                String token = adminService.generateToken(request.getUsername());
+                User user = userRepository.findByUsername(request.getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+                
+                Map<String, Object> response = new HashMap<>();
+                response.put("token", token);
+                response.put("username", user.getUsername());
+                response.put("role", user.getRole());
+                response.put("email", user.getEmail());
+                
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid verification code"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
     @GetMapping("/validate")
     public ResponseEntity<?> validateAdminToken(@RequestHeader("Authorization") String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(401).body("Missing or invalid Authorization header");
+            return ResponseEntity.status(401).body(Map.of("error", "Missing or invalid Authorization header"));
         }
         
         String token = authHeader.substring(7);
@@ -71,7 +103,7 @@ public class AdminAuthController {
                 .orElseThrow(() -> new RuntimeException("User not found"));
                 
             if (user.getRole() != User.UserRole.ADMIN) {
-                return ResponseEntity.status(403).body("Not authorized as admin");
+                return ResponseEntity.status(403).body(Map.of("error", "Not authorized as admin"));
             }
             
             Map<String, Object> response = new HashMap<>();
@@ -81,7 +113,7 @@ public class AdminAuthController {
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.status(401).body("Invalid token");
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid token"));
         }
     }
 } 

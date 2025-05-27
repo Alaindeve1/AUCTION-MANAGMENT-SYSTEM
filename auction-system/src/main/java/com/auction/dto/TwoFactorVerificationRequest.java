@@ -3,15 +3,15 @@ package com.auction.dto;
 import lombok.Data;
 
 @Data
-public class AdminLoginRequest {
+public class TwoFactorVerificationRequest {
     private String username;
-    private String password;
+    private int code;
 
     public String getUsername() {
         return username;
     }
 
-    public String getPassword() {
-        return password;
+    public int getCode() {
+        return code;
     }
 } 

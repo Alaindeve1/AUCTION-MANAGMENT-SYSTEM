@@ -36,15 +36,18 @@ public class User implements UserDetails {
     private String username;
 
     @NotBlank
-    @Column(nullable = false)
+    @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
     @Email
     @Column(unique = true, nullable = false)
     private String email;
 
+    @Column(name = "two_factor_secret")
+    private String twoFactorSecret;
+
+    @Column(name = "role", nullable = false)
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private UserRole role;
 
     @Enumerated(EnumType.STRING)
@@ -199,5 +202,13 @@ public class User implements UserDetails {
 
     public void setWonAuctions(List<AuctionResult> wonAuctions) {
         this.wonAuctions = wonAuctions;
+    }
+
+    public String getTwoFactorSecret() {
+        return twoFactorSecret;
+    }
+
+    public void setTwoFactorSecret(String twoFactorSecret) {
+        this.twoFactorSecret = twoFactorSecret;
     }
 }
