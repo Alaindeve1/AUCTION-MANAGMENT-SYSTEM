@@ -79,23 +79,52 @@ public class ItemController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ItemDto> createItem(@RequestBody Map<String, Object> request) {
-        // TODO: Restrict to admin only (add proper security check here)
-        String title = (String) request.get("title");
-        String description = (String) request.getOrDefault("description", "");
-        String imageUrl = (String) request.getOrDefault("imageUrl", "");
-        Double startingPrice = Double.valueOf(request.get("startingPrice").toString());
-        String itemStatusStr = (String) request.getOrDefault("itemStatus", "DRAFT");
-        Long categoryId = request.get("categoryId") != null ? Long.valueOf(request.get("categoryId").toString()) : null;
+        try {
+            String title = (String) request.get("title");
+            String description = (String) request.getOrDefault("description", "");
+            String imageUrl = (String) request.getOrDefault("imageUrl", "");
+            Double startingPrice = Double.valueOf(request.get("startingPrice").toString());
+            String itemStatusStr = (String) request.getOrDefault("itemStatus", "DRAFT");
+            Long categoryId = request.get("categoryId") != null ? Long.valueOf(request.get("categoryId").toString()) : null;
+            
+            // Parse dates with better error handling
+            LocalDateTime startDate = null;
+            LocalDateTime endDate = null;
+            
+            Object startDateObj = request.get("startDate");
+            Object endDateObj = request.get("endDate");
+            
+            if (startDateObj != null) {
+                if (startDateObj instanceof String) {
+                    startDate = LocalDateTime.parse((String) startDateObj);
+                } else if (startDateObj instanceof LocalDateTime) {
+                    startDate = (LocalDateTime) startDateObj;
+                }
+            }
+            
+            if (endDateObj != null) {
+                if (endDateObj instanceof String) {
+                    endDate = LocalDateTime.parse((String) endDateObj);
+                } else if (endDateObj instanceof LocalDateTime) {
+                    endDate = (LocalDateTime) endDateObj;
+                }
+            }
 
-        Item item = new Item();
-        item.setTitle(title);
-        item.setDescription(description);
-        item.setImageUrl(imageUrl);
-        item.setStartingPrice(java.math.BigDecimal.valueOf(startingPrice));
-        item.setItemStatus(Item.ItemStatus.valueOf(itemStatusStr));
+            Item item = new Item();
+            item.setTitle(title);
+            item.setDescription(description);
+            item.setImageUrl(imageUrl);
+            item.setStartingPrice(java.math.BigDecimal.valueOf(startingPrice));
+            item.setItemStatus(Item.ItemStatus.valueOf(itemStatusStr));
+            item.setStartDate(startDate);
+            item.setEndDate(endDate);
 
-        Item createdItem = itemService.createItem(item, categoryId);
-        return new ResponseEntity<>(ItemDto.fromEntity(createdItem), HttpStatus.CREATED);
+            Item createdItem = itemService.createItem(item, categoryId);
+            return new ResponseEntity<>(ItemDto.fromEntity(createdItem), HttpStatus.CREATED);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error creating item: " + e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")

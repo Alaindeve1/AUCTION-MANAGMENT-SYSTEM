@@ -58,7 +58,7 @@ const AdminLogin = () => {
 
       if (result.success) {
         console.log('2FA successful, navigating to dashboard');
-        navigate('/admin/dashboard');
+      navigate('/admin/dashboard');
       } else {
         console.log('2FA failed:', result.error);
         setError(result.error);
@@ -81,9 +81,9 @@ const AdminLogin = () => {
     <div className="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Admin Login</h1>
-          <p className="mt-2 text-gray-600">Enter your credentials to access the admin panel</p>
-        </div>
+            <h1 className="text-3xl font-bold text-gray-900">Admin Login</h1>
+            <p className="mt-2 text-gray-600">Enter your credentials to access the admin panel</p>
+          </div>
 
         {(error || authError) && (
           <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
@@ -94,26 +94,26 @@ const AdminLogin = () => {
         {step === 'credentials' ? (
           <form onSubmit={handleCredentialsSubmit} className="mt-8 space-y-6">
             <div className="rounded-md shadow-sm -space-y-px">
-              <div>
+            <div>
                 <label htmlFor="username" className="sr-only">Username</label>
-                <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  required
+              <input
+                id="username"
+                name="username"
+                type="text"
+                required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                   placeholder="Username"
-                />
-              </div>
-              <div>
+              />
+            </div>
+            <div>
                 <label htmlFor="password" className="sr-only">Password</label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
@@ -123,13 +123,13 @@ const AdminLogin = () => {
             </div>
 
             <div>
-              <button
-                type="submit"
+            <button
+              type="submit"
                 disabled={isLoading}
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+            >
                 {isLoading ? 'Signing in...' : 'Sign in'}
-              </button>
+            </button>
             </div>
           </form>
         ) : (
@@ -146,7 +146,7 @@ const AdminLogin = () => {
               onCancel={handleCancel}
               isLoading={isLoading}
             />
-          </div>
+        </div>
         )}
       </div>
     </div>

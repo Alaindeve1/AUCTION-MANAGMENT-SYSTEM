@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { useAdminAuth } from './AdminAuthContext';
 
 const statusOptions = ['DRAFT', 'ACTIVE', 'ENDED', 'SOLD'];
@@ -34,8 +34,8 @@ const AdminItemsPage = () => {
       setError(null);
       try {
         const [itemsRes, categoriesRes] = await Promise.all([
-          axios.get('/api/items', { headers: { Authorization: `Bearer ${admin?.token}` } }),
-          axios.get('/api/categories', { headers: { Authorization: `Bearer ${admin?.token}` } })
+          api.get('/items'),
+          api.get('/categories')
         ]);
         setItems(itemsRes.data);
         setCategories(categoriesRes.data);
@@ -49,6 +49,9 @@ const AdminItemsPage = () => {
 
   const handleAdd = () => {
     setEditItem(null);
+    const now = new Date();
+    const oneWeekLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    
     setForm({
       title: '',
       categoryId: '',
@@ -56,8 +59,8 @@ const AdminItemsPage = () => {
       itemStatus: 'DRAFT',
       description: '',
       imageUrl: '',
-      startDate: new Date().toISOString().slice(0, 16),
-      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16)
+      startDate: now.toISOString().slice(0, 16),
+      endDate: oneWeekLater.toISOString().slice(0, 16)
     });
     setShowModal(true);
     setFormError(null);
@@ -65,6 +68,9 @@ const AdminItemsPage = () => {
 
   const handleEdit = (item) => {
     setEditItem(item);
+    const startDate = item.startDate ? new Date(item.startDate).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16);
+    const endDate = item.endDate ? new Date(item.endDate).toISOString().slice(0, 16) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
+    
     setForm({
       title: item.title || '',
       categoryId: item.category?.categoryId || item.categoryId || '',
@@ -72,8 +78,8 @@ const AdminItemsPage = () => {
       itemStatus: item.itemStatus || 'DRAFT',
       description: item.description || '',
       imageUrl: item.imageUrl || '',
-      startDate: item.startDate ? item.startDate.slice(0, 16) : new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
-      endDate: item.endDate ? item.endDate.slice(0, 16) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+      startDate,
+      endDate
     });
     setShowModal(true);
     setFormError(null);
@@ -82,9 +88,7 @@ const AdminItemsPage = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
       try {
-        await axios.delete(`/api/items/${id}`, {
-          headers: { Authorization: `Bearer ${admin?.token}` },
-        });
+        await api.delete(`/items/${id}`);
         setItems(items.filter(item => item.itemId !== id));
       } catch {
         alert('Failed to delete item.');
@@ -119,7 +123,7 @@ const AdminItemsPage = () => {
       const formData = new FormData();
       formData.append('file', file);
       
-      const res = await axios.post('/api/items/upload-image', formData, {
+      const res = await api.post('/items/upload-image', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${admin?.token}`
@@ -147,25 +151,21 @@ const AdminItemsPage = () => {
         startingPrice: parseFloat(form.price),
         itemStatus: form.itemStatus,
         imageUrl: form.imageUrl,
-        startDate: form.startDate ? new Date(form.startDate).toISOString() : undefined,
-        endDate: form.endDate ? new Date(form.endDate).toISOString() : undefined
+        startDate: form.startDate ? new Date(form.startDate).toISOString().slice(0, 19) : null,
+        endDate: form.endDate ? new Date(form.endDate).toISOString().slice(0, 19) : null
       };
 
-      console.log('Saving item with imageUrl:', payload.imageUrl);
+      console.log('Saving item with payload:', payload);
 
       if (editItem) {
         // Edit
-        await axios.put(`/api/items/${editItem.itemId}`, payload, {
-          headers: { Authorization: `Bearer ${admin?.token}` },
-        });
+        await api.put(`/items/${editItem.itemId}`, payload);
       } else {
         // Create
-        await axios.post('/api/items', payload, {
-          headers: { Authorization: `Bearer ${admin?.token}` },
-        });
+        await api.post('/items', payload);
       }
       // Refresh items
-      const res = await axios.get('/api/items', { headers: { Authorization: `Bearer ${admin?.token}` } });
+      const res = await api.get('/items');
       setItems(res.data);
       setShowModal(false);
     } catch (err) {
@@ -199,72 +199,80 @@ const AdminItemsPage = () => {
         {/* Cards layout with animation */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-8 animate__animated animate__fadeInUp">
           {paginatedItems.map(item => (
-            <div key={item.itemId} className="bg-white rounded-2xl shadow-xl p-5 flex flex-col justify-between hover:shadow-2xl transition-all duration-300 animate__animated animate__zoomIn">
-              <div>
-                <div className="relative h-40 mb-4">
-                  {item.imageUrl ? (
-                    <img src={item.imageUrl ? `http://localhost:8080${item.imageUrl}` : ''} alt={item.title} className="w-full h-full object-cover rounded-xl" />
-                  ) : (
-                    <div className="w-full h-full bg-gray-200 rounded-xl flex items-center justify-center">
-                      <span className="text-gray-400">No image</span>
-                    </div>
-                  )}
-                  <span className={`absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-bold shadow ${
-                    item.itemStatus === 'ACTIVE' ? 'bg-green-100 text-green-700' :
-                    item.itemStatus === 'SOLD' ? 'bg-blue-100 text-blue-700' :
-                    item.itemStatus === 'ENDED' ? 'bg-yellow-100 text-yellow-700' :
-                    'bg-gray-100 text-gray-700'
-                  } animate__animated animate__fadeIn`}>{item.itemStatus}</span>
+            <div key={item.itemId} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+              <div className="relative h-48">
+                {item.imageUrl ? (
+                  <img
+                    src={`http://localhost:8080${item.imageUrl}`}
+                    alt={item.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                    <span className="text-gray-400">No image</span>
+                  </div>
+                )}
+                <div className="absolute top-2 right-2">
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                    item.itemStatus === 'ACTIVE' ? 'bg-green-100 text-green-800' :
+                    item.itemStatus === 'ENDED' ? 'bg-red-100 text-red-800' :
+                    item.itemStatus === 'SOLD' ? 'bg-purple-100 text-purple-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {item.itemStatus}
+                  </span>
                 </div>
-                <h3 className="text-lg font-bold mb-2 text-indigo-700 truncate">{item.title}</h3>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="bg-indigo-50 text-indigo-600 px-2 py-1 rounded text-xs font-semibold">{item.category?.categoryName || 'N/A'}</span>
-                </div>
-                <p className="text-gray-600 mb-2 line-clamp-2">{item.description}</p>
-                <div className="font-bold text-xl text-indigo-600 mb-2">${item.startingPrice}</div>
-                <div className="text-xs text-gray-400 mb-1">Start: {item.startDate ? new Date(item.startDate).toLocaleString() : '-'}</div>
-                <div className="text-xs text-gray-400">End: {item.endDate ? new Date(item.endDate).toLocaleString() : '-'}</div>
               </div>
-              <div className="flex gap-2 mt-4">
-                <button
-                  onClick={() => handleEdit(item)}
-                  className="flex-1 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 transition animate__animated animate__fadeInLeft"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(item.itemId)}
-                  className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-700 transition animate__animated animate__fadeInRight"
-                >
-                  Delete
-                </button>
+              <div className="p-4">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">{item.title}</h3>
+                <p className="text-gray-600 text-sm mb-2 line-clamp-2">{item.description}</p>
+                <div className="flex justify-between items-center">
+                  <span className="text-indigo-600 font-semibold">${item.startingPrice}</span>
+                  <div className="space-x-2">
+                    <button
+                      onClick={() => handleEdit(item)}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.itemId)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           ))}
         </div>
-        {/* Pagination controls */}
+
+        {/* Pagination Controls */}
         {totalPages > 1 && (
-          <div className="flex justify-center gap-2 mb-8 animate__animated animate__fadeInUp animate__delay-1s">
+          <div className="flex justify-center items-center space-x-2 mt-6">
             <button
-              className="px-3 py-1 rounded bg-gray-200 text-gray-700 hover:bg-indigo-100 disabled:opacity-60"
-              onClick={() => setCurrentPage(page => Math.max(page - 1, 1))}
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
+              className={`px-4 py-2 rounded-lg ${
+                currentPage === 1
+                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  : 'bg-indigo-600 text-white hover:bg-indigo-700'
+              }`}
             >
-              Prev
+              Previous
             </button>
-            {[...Array(totalPages)].map((_, i) => (
-              <button
-                key={i}
-                className={`px-3 py-1 rounded ${currentPage === i + 1 ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-indigo-100'}`}
-                onClick={() => setCurrentPage(i + 1)}
-              >
-                {i + 1}
-              </button>
-            ))}
+            <span className="text-gray-600">
+              Page {currentPage} of {totalPages}
+            </span>
             <button
-              className="px-3 py-1 rounded bg-gray-200 text-gray-700 hover:bg-indigo-100 disabled:opacity-60"
-              onClick={() => setCurrentPage(page => Math.min(page + 1, totalPages))}
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
+              className={`px-4 py-2 rounded-lg ${
+                currentPage === totalPages
+                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  : 'bg-indigo-600 text-white hover:bg-indigo-700'
+              }`}
             >
               Next
             </button>
