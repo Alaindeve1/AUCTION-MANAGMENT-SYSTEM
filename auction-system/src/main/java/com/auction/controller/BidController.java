@@ -102,4 +102,13 @@ public class BidController {
     public ResponseEntity<List<UserBidDTO>> getUserBids() {
         return ResponseEntity.ok(bidService.getUserBids());
     }
+
+    @GetMapping("/history")
+    public ResponseEntity<List<BidDto>> getBidHistory() {
+        List<Bid> bids = bidService.getAllBids();
+        List<BidDto> bidDtos = bids.stream()
+                .map(BidDto::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(bidDtos);
+    }
 }

@@ -179,4 +179,19 @@ public class ItemController {
         itemService.deleteItem(itemId);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/popular")
+    public ResponseEntity<List<ItemDto>> getPopularItems() {
+        List<Item> items = itemService.getPopularItems();
+        List<ItemDto> itemDtos = items.stream()
+                .map(ItemDto::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(itemDtos);
+    }
+
+    @GetMapping("/category-stats")
+    public ResponseEntity<Map<String, Long>> getCategoryStats() {
+        Map<String, Long> stats = itemService.getCategoryStats();
+        return ResponseEntity.ok(stats);
+    }
 }

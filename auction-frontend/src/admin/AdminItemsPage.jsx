@@ -201,17 +201,17 @@ const AdminItemsPage = () => {
           {paginatedItems.map(item => (
             <div key={item.itemId} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
               <div className="relative h-48">
-                {item.imageUrl ? (
+                  {item.imageUrl ? (
                   <img
                     src={`http://localhost:8080${item.imageUrl}`}
                     alt={item.title}
                     className="w-full h-full object-cover"
                   />
-                ) : (
+                  ) : (
                   <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                    <span className="text-gray-400">No image</span>
-                  </div>
-                )}
+                      <span className="text-gray-400">No image</span>
+                    </div>
+                  )}
                 <div className="absolute top-2 right-2">
                   <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                     item.itemStatus === 'ACTIVE' ? 'bg-green-100 text-green-800' :
@@ -229,18 +229,18 @@ const AdminItemsPage = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-indigo-600 font-semibold">${item.startingPrice}</span>
                   <div className="space-x-2">
-                    <button
-                      onClick={() => handleEdit(item)}
+                <button
+                  onClick={() => handleEdit(item)}
                       className="text-blue-600 hover:text-blue-800"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.itemId)}
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(item.itemId)}
                       className="text-red-600 hover:text-red-800"
-                    >
-                      Delete
-                    </button>
+                >
+                  Delete
+                </button>
                   </div>
                 </div>
               </div>

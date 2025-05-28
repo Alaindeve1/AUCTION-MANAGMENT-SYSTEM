@@ -1,18 +1,23 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../utils/api';
-import { UserGroupIcon, CurrencyDollarIcon, ChartBarIcon, CubeIcon, ClockIcon, SparklesIcon } from '@heroicons/react/24/outline';
-// import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-
-const cardConfig = [
-  { name: 'Users', icon: <UserGroupIcon className="w-8 h-8 text-indigo-600" />, key: 'users' },
-  { name: 'Active Users', icon: <CubeIcon className="w-8 h-8 text-indigo-600" />, key: 'activeUsers' },
-  { name: 'Bids', icon: <ChartBarIcon className="w-8 h-8 text-indigo-600" />, key: 'totalBids' },
-  { name: 'Revenue', icon: <CurrencyDollarIcon className="w-8 h-8 text-indigo-600" />, key: 'revenue' },
-  { name: 'Active Auctions', icon: <ClockIcon className="w-8 h-8 text-indigo-600" />, key: 'activeAuctions' },
-];
+import { UserGroupIcon, CurrencyDollarIcon, ChartBarIcon, CubeIcon, ClockIcon, TagIcon, TrophyIcon } from '@heroicons/react/24/outline';
+import { motion } from 'framer-motion';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 
 const AdminDashboard = () => {
+  const [timeRange, setTimeRange] = useState('monthly');
+
+  // Mock data for the chart (fallback data)
+  const mockBidData = [
+    { date: 'Jan', bids: 65, revenue: 4500 },
+    { date: 'Feb', bids: 59, revenue: 3800 },
+    { date: 'Mar', bids: 80, revenue: 5200 },
+    { date: 'Apr', bids: 81, revenue: 5500 },
+    { date: 'May', bids: 56, revenue: 4200 },
+    { date: 'Jun', bids: 55, revenue: 4100 },
+  ];
+
   // Users
   const { data: users = [] } = useQuery({
     queryKey: ['users'],
@@ -40,6 +45,70 @@ const AdminDashboard = () => {
     }
   });
 
+  // New query for bid history with proper error handling
+  const { 
+    data: bidHistory = [], 
+    isLoading: isBidHistoryLoading,
+    error: bidHistoryError 
+  } = useQuery({
+    queryKey: ['bidHistory'],
+    queryFn: async () => {
+      try {
+        const res = await api.get('/bids/history');
+        console.log('Bid History Response:', res.data);
+        return res.data;
+      } catch (error) {
+        console.error('Error fetching bid history:', error);
+        throw error;
+      }
+    },
+    retry: 1,
+    refetchOnWindowFocus: false
+  });
+
+  // Transform bid history data for the chart with debug logs
+  const chartData = useMemo(() => {
+    console.log('Raw bid history:', bidHistory);
+    
+    if (!bidHistory || !Array.isArray(bidHistory) || bidHistory.length === 0) {
+      console.log('Using mock data as fallback');
+      return mockBidData;
+    }
+
+    // Group bids by month and calculate totals
+    const groupedData = bidHistory.reduce((acc, bid) => {
+      if (!bid || !bid.bidTime) {
+        console.log('Invalid bid data:', bid);
+        return acc;
+      }
+
+      const date = new Date(bid.bidTime);
+      const month = date.toLocaleString('default', { month: 'short' });
+      
+      if (!acc[month]) {
+        acc[month] = {
+          date: month,
+          bids: 0,
+          revenue: 0
+        };
+      }
+      
+      acc[month].bids += 1;
+      acc[month].revenue += Number(bid.bidAmount) || 0;
+      
+      return acc;
+    }, {});
+
+    // Sort data by month
+    const sortedData = Object.values(groupedData).sort((a, b) => {
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return months.indexOf(a.date) - months.indexOf(b.date);
+    });
+
+    console.log('Processed chart data:', sortedData);
+    return sortedData;
+  }, [bidHistory]);
+
   // Recent users (last 5)
   const recentUsers = users.slice(-5).reverse();
   // Recent results (last 5)
@@ -47,100 +116,294 @@ const AdminDashboard = () => {
   // Revenue: sum of finalPrice for COMPLETED results
   const revenue = auctionResults.filter(r => r.resultStatus === 'COMPLETED').reduce((sum, r) => sum + (r.finalPrice || 0), 0);
 
-  // AI Insights (simple AI logic)
-  const aiInsights = [];
-  if (bidsStats.totalBids > 100) aiInsights.push('🔥 Bid activity is high!');
-  if (revenue > 10000) aiInsights.push('💰 Revenue is strong this month.');
-  if (bidsStats.uniqueBidders > 20) aiInsights.push('👥 Lots of unique bidders.');
-  if (recentUsers.length > 0) aiInsights.push(`🆕 New user: ${recentUsers[0]?.username}`);
-  if (recentResults.length > 0) aiInsights.push(`🏆 Latest auction: ${recentResults[0]?.itemTitle || recentResults[0]?.itemId}`);
+  // Popular items
+  const { data: popularItems = [] } = useQuery({
+    queryKey: ['popularItems'],
+    queryFn: async () => {
+      const res = await api.get('/items/popular');
+      return res.data;
+    }
+  });
+
+  // Category stats
+  const { data: categoryStats = {} } = useQuery({
+    queryKey: ['categoryStats'],
+    queryFn: async () => {
+      const res = await api.get('/items/category-stats');
+      return res.data;
+    }
+  });
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-8 text-indigo-700">Admin Dashboard</h1>
+      {/* Welcome Message */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-12 text-center"
+      >
+        <motion.h1 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2 }}
+          className="text-5xl font-bold mb-4 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent"
+        >
+          Welcome Back, Admin
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="text-gray-600 text-lg"
+        >
+          Here's what's happening with your auction platform today
+        </motion.p>
+      </motion.div>
+
       {/* Summary cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-        <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center hover:shadow-xl transition-shadow duration-300"
+        >
           <UserGroupIcon className="w-8 h-8 text-indigo-600 mb-2" />
           <div className="text-3xl font-bold text-indigo-700">{users.length}</div>
-          <div className="text-gray-600">Users</div>
-        </div>
-        <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
+          <div className="text-gray-600">Total Users</div>
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center hover:shadow-xl transition-shadow duration-300"
+        >
           <CubeIcon className="w-8 h-8 text-indigo-600 mb-2" />
-          <div className="text-3xl font-bold text-indigo-700">{users.filter(u => u.userStatus === 'ACTIVE').length}</div>
+          <div className="text-3xl font-bold text-indigo-700">{users.filter(u => u?.userStatus === 'ACTIVE').length}</div>
           <div className="text-gray-600">Active Users</div>
-        </div>
-        <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center hover:shadow-xl transition-shadow duration-300"
+        >
           <ChartBarIcon className="w-8 h-8 text-indigo-600 mb-2" />
           <div className="text-3xl font-bold text-indigo-700">{bidsStats.totalBids}</div>
           <div className="text-gray-600">Total Bids</div>
-        </div>
-        <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center hover:shadow-xl transition-shadow duration-300"
+        >
           <CurrencyDollarIcon className="w-8 h-8 text-indigo-600 mb-2" />
           <div className="text-3xl font-bold text-indigo-700">${revenue.toLocaleString()}</div>
-          <div className="text-gray-600">Revenue</div>
-        </div>
-        <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-          <ClockIcon className="w-8 h-8 text-indigo-600 mb-2" />
-          <div className="text-3xl font-bold text-indigo-700">{bidsStats.activeAuctions}</div>
-          <div className="text-gray-600">Active Auctions</div>
-        </div>
+          <div className="text-gray-600">Total Revenue</div>
+        </motion.div>
       </div>
 
-      {/* Chart & AI Insights */}
+      {/* Chart & Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Chart Placeholder */}
-        <div className="bg-white rounded-xl shadow p-6 col-span-2 flex flex-col">
-          <div className="flex items-center mb-4">
-            <ChartBarIcon className="w-6 h-6 text-indigo-600 mr-2" />
-            <span className="font-semibold text-lg text-gray-700">Bid Activity (Chart)</span>
+        {/* Chart Section */}
+        <div className="bg-white rounded-xl shadow-lg p-6 col-span-2">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center">
+              <ChartBarIcon className="w-6 h-6 text-indigo-600 mr-2" />
+              <span className="font-semibold text-lg text-gray-700">Bid Activity Overview</span>
+            </div>
+            <div className="flex space-x-2">
+              <button 
+                onClick={() => setTimeRange('daily')}
+                className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                  timeRange === 'daily' 
+                    ? 'bg-indigo-600 text-white' 
+                    : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+                }`}
+              >
+                Daily
+              </button>
+              <button 
+                onClick={() => setTimeRange('monthly')}
+                className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                  timeRange === 'monthly' 
+                    ? 'bg-indigo-600 text-white' 
+                    : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+                }`}
+              >
+                Monthly
+              </button>
+              <button 
+                onClick={() => setTimeRange('yearly')}
+                className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                  timeRange === 'yearly' 
+                    ? 'bg-indigo-600 text-white' 
+                    : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+                }`}
+              >
+                Yearly
+              </button>
+            </div>
           </div>
-          <div className="flex-1 flex items-center justify-center text-gray-400 h-40">
-            {/* Chart.js or Recharts chart goes here */}
-            <span>Chart coming soon...</span>
+          <div className="h-80">
+            {isBidHistoryLoading ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="text-gray-500">Loading chart data...</div>
+              </div>
+            ) : bidHistoryError ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="text-red-500">Error loading chart data: {bidHistoryError.message}</div>
+              </div>
+            ) : chartData.length === 0 ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="text-gray-500">No bid data available</div>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={chartData}
+                  margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="#6B7280"
+                    tick={{ fill: '#6B7280' }}
+                  />
+                  <YAxis 
+                    yAxisId="left"
+                    stroke="#6B7280"
+                    tick={{ fill: '#6B7280' }}
+                  />
+                  <YAxis 
+                    yAxisId="right"
+                    orientation="right"
+                    stroke="#6B7280"
+                    tick={{ fill: '#6B7280' }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'white',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '0.5rem',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                    }}
+                  />
+                  <Legend />
+                  <Line
+                    yAxisId="left"
+                    type="monotone"
+                    dataKey="bids"
+                    name="Number of Bids"
+                    stroke="#4F46E5"
+                    strokeWidth={2}
+                    dot={{ fill: '#4F46E5', strokeWidth: 2 }}
+                    activeDot={{ r: 8, fill: '#4F46E5' }}
+                  />
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="revenue"
+                    name="Revenue ($)"
+                    stroke="#10B981"
+                    strokeWidth={2}
+                    dot={{ fill: '#10B981', strokeWidth: 2 }}
+                    activeDot={{ r: 8, fill: '#10B981' }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
-        {/* AI Insights */}
-        <div className="bg-gradient-to-br from-indigo-100 to-indigo-300 rounded-xl shadow p-6 flex flex-col">
-          <div className="flex items-center mb-4">
-            <SparklesIcon className="w-6 h-6 text-indigo-600 mr-2" />
-            <span className="font-semibold text-lg text-indigo-800">AI Insights</span>
-          </div>
-          <ul className="space-y-2">
-            {aiInsights.length === 0 && <li key="no-insights" className="text-gray-500">No insights at this time.</li>}
-            {aiInsights.map((insight, idx) => (
-              <li key={`insight-${idx}`} className="bg-white rounded px-3 py-2 shadow-sm text-gray-700">{insight}</li>
-            ))}
-          </ul>
+
+        {/* Quick Stats */}
+        <div className="space-y-6">
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.6 }}
+            className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg p-6 text-white"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <TrophyIcon className="w-8 h-8" />
+              <span className="text-2xl font-bold">Top Categories</span>
+            </div>
+            <ul className="space-y-3">
+              {Object.entries(categoryStats).map(([category, count]) => (
+                <li key={category} className="flex items-center justify-between">
+                  <span>{category}</span>
+                  <span className="font-semibold">{count} items</span>
+                </li>
+              ))}
+              {Object.keys(categoryStats).length === 0 && (
+                <li className="text-center text-gray-300">No category data available</li>
+              )}
+            </ul>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.7 }}
+            className="bg-white rounded-xl shadow-lg p-6"
+          >
+            <div className="flex items-center mb-4">
+              <TagIcon className="w-6 h-6 text-indigo-600 mr-2" />
+              <span className="font-semibold text-lg text-gray-700">Popular Items</span>
+            </div>
+            <ul className="space-y-3">
+              {popularItems.map(item => (
+                <li key={item.itemId} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                  <span className="text-gray-600">{item.title}</span>
+                  <span className="text-indigo-600 font-medium">${item.currentHighestBid?.toLocaleString() || item.startingPrice?.toLocaleString() || '0'}</span>
+                </li>
+              ))}
+              {popularItems.length === 0 && (
+                <li className="text-center text-gray-500">No popular items available</li>
+              )}
+            </ul>
+          </motion.div>
         </div>
       </div>
 
       {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="bg-white rounded-xl shadow-lg p-6"
+        >
           <div className="font-semibold text-lg text-gray-700 mb-4">Recent Users</div>
           <ul className="divide-y divide-gray-100">
-            {recentUsers.length === 0 && <li key="no-recent-users" className="text-gray-400">No recent users.</li>}
+            {recentUsers.length === 0 && <li className="text-gray-400 py-2">No recent users.</li>}
             {recentUsers.map(u => (
-              <li key={u.userId} className="py-2 flex flex-col">
-                <span className="font-medium text-gray-900">{u.username}</span>
-                <span className="text-xs text-gray-500">{u.email}</span>
+              <li key={u?.userId || Math.random()} className="py-3 flex items-center space-x-3 hover:bg-gray-50 px-2 rounded-lg transition-colors">
+                <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                  <span className="text-indigo-600 font-medium">
+                    {u?.username ? u.username.charAt(0).toUpperCase() : '?'}
+                  </span>
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900">{u?.username || 'Unknown User'}</div>
+                  <div className="text-sm text-gray-500">{u?.email || 'No email'}</div>
+                </div>
+                <div className="text-sm text-gray-500">
+                  {u?.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}
+                </div>
               </li>
             ))}
           </ul>
-        </div>
-        <div className="bg-white rounded-xl shadow p-6">
-          <div className="font-semibold text-lg text-gray-700 mb-4">Recent Auctions</div>
-          <ul className="divide-y divide-gray-100">
-            {recentResults.length === 0 && <li key="no-recent-auctions" className="text-gray-400">No recent auctions.</li>}
-            {recentResults.map(r => (
-              <li key={r.resultId || r.itemId} className="py-2 flex flex-col">
-                <span className="font-medium text-gray-900">{r.itemTitle || r.itemId}</span>
-                <span className="text-xs text-gray-500">{r.resultStatus} &bull; {r.endDate ? new Date(r.endDate).toLocaleDateString() : '-'}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

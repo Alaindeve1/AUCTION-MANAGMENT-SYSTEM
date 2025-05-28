@@ -12,6 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.stream.Collectors;
+import java.util.LinkedHashMap;
 
 @Service
 public class ItemService {
@@ -125,5 +129,33 @@ public class ItemService {
 
     public List<Item> findExpiredAuctions() {
         return itemRepository.findExpiredAuctions(LocalDateTime.now());
+    }
+
+    public List<Item> getPopularItems() {
+        // Get items with the most bids
+        return itemRepository.findTop5ByOrderByBidsCountDesc();
+    }
+
+    public Map<String, Long> getCategoryStats() {
+        List<Item> allItems = itemRepository.findAll();
+        Map<String, Long> categoryStats = new HashMap<>();
+        
+        for (Item item : allItems) {
+            if (item.getCategory() != null) {
+                String categoryName = item.getCategory().getCategoryName();
+                categoryStats.merge(categoryName, 1L, Long::sum);
+            }
+        }
+        
+        // Sort by count in descending order and limit to top 3
+        return categoryStats.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .limit(3)
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (e1, e2) -> e1,
+                        LinkedHashMap::new
+                ));
     }
 }

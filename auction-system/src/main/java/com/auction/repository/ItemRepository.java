@@ -27,4 +27,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
            "LOWER(i.category.categoryName) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<Item> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseOrCategoryNameContainingIgnoreCase(
         String query, String query2, String query3);
+
+    @Query("SELECT i FROM Item i LEFT JOIN i.bids b GROUP BY i ORDER BY COUNT(b) DESC")
+    List<Item> findTop5ByOrderByBidsCountDesc();
 }

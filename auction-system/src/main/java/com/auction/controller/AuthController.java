@@ -34,6 +34,35 @@ public class AuthController {
     @Autowired
     private UserService userService;
 
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody Map<String, String> request) {
+        try {
+            // Check if username already exists
+            if (userRepository.findByUsername(request.get("username")).isPresent()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Username already exists"));
+            }
+
+            // Check if email already exists
+            if (userRepository.findByEmail(request.get("email")).isPresent()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Email already registered"));
+            }
+
+            // Create new user
+            User user = new User();
+            user.setUsername(request.get("username"));
+            user.setEmail(request.get("email"));
+            user.setPasswordHash(passwordEncoder.encode(request.get("password")));
+            user.setRole(User.UserRole.USER); // Using the enum
+            user.setUserStatus(User.UserStatus.ACTIVE); // Set initial status
+
+            userRepository.save(user);
+
+            return ResponseEntity.ok().body(Map.of("message", "User registered successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
         try {
