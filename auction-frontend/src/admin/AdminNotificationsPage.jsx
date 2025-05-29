@@ -33,8 +33,8 @@ const AdminNotificationsPage = () => {
   };
 
   return (
-    <Paper elevation={3} sx={{ p: 4, maxWidth: 500, mx: "auto", mt: 4 }}>
-      <Typography variant="h5" gutterBottom color="primary.main" fontWeight={700}>
+    <Paper elevation={3} sx={{ p: 4, maxWidth: 500, mx: "auto", mt: 4, bgcolor: 'rgb(31, 41, 55)', color: 'white' }}>
+      <Typography variant="h5" gutterBottom fontWeight={700} sx={{ color: 'white' }}>
         Send Notification to All Users
       </Typography>
       <TextField
@@ -45,6 +45,11 @@ const AdminNotificationsPage = () => {
         margin="normal"
         required
         placeholder="Enter notification title"
+        sx={{ 
+          '& .MuiOutlinedInput-root': { color: 'white' },
+          '& .MuiInputLabel-root': { color: 'white' },
+          '& .MuiOutlinedInput-notchedOutline': { borderColor: 'gray.500' }
+        }}
       />
       <TextField
         label="Message"
@@ -56,6 +61,11 @@ const AdminNotificationsPage = () => {
         margin="normal"
         required
         placeholder="Enter notification message"
+        sx={{ 
+          '& .MuiOutlinedInput-root': { color: 'white' },
+          '& .MuiInputLabel-root': { color: 'white' },
+          '& .MuiOutlinedInput-notchedOutline': { borderColor: 'gray.500' }
+        }}
       />
       <Button
         variant="contained"

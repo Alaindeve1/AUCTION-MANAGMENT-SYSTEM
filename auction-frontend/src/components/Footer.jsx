@@ -46,7 +46,7 @@ const Footer = () => {
             <h3 className="text-xl font-bold">Contact Us</h3>
             <ul className="space-y-2 text-gray-400">
                 <li>Email:
-                  <a href="alainndizeye11@gmail.com" className="hover:underline">alainndizeye11@gmail.com</a>
+                  <a href="auction@gmail.com" className="hover:underline">auction@gmail.com</a>
                 </li>
                 <li>Phone: +250 799324850</li>
               <li>Address: Kigali,Rwanda</li>

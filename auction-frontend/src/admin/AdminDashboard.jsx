@@ -24,7 +24,9 @@ const AdminDashboard = () => {
     queryFn: async () => {
       const res = await api.get('/admin/users');
       return res.data;
-    }
+    },
+    staleTime: 30000, // Don't refetch for 30 seconds
+    refetchOnWindowFocus: false
   });
 
   // Bids stats
@@ -33,7 +35,9 @@ const AdminDashboard = () => {
     queryFn: async () => {
       const res = await api.get('/bids/stats');
       return res.data;
-    }
+    },
+    staleTime: 30000,
+    refetchOnWindowFocus: false
   });
 
   // Auction results (for revenue & recent activity)
@@ -110,11 +114,18 @@ const AdminDashboard = () => {
   }, [bidHistory]);
 
   // Recent users (last 5)
-  const recentUsers = users.slice(-5).reverse();
-  // Recent results (last 5)
-  const recentResults = auctionResults.slice(-5).reverse();
+  const recentUsers = useMemo(() => {
+    if (!Array.isArray(users)) return [];
+    return users.slice(-5).reverse();
+  }, [users]);
+
   // Revenue: sum of finalPrice for COMPLETED results
-  const revenue = auctionResults.filter(r => r.resultStatus === 'COMPLETED').reduce((sum, r) => sum + (r.finalPrice || 0), 0);
+  const revenue = useMemo(() => {
+    if (!Array.isArray(auctionResults)) return 0;
+    return auctionResults
+      .filter(r => r?.resultStatus === 'COMPLETED')
+      .reduce((sum, r) => sum + (r?.finalPrice || 0), 0);
+  }, [auctionResults]);
 
   // Popular items
   const { data: popularItems = [] } = useQuery({
@@ -122,7 +133,9 @@ const AdminDashboard = () => {
     queryFn: async () => {
       const res = await api.get('/items/popular');
       return res.data;
-    }
+    },
+    staleTime: 30000,
+    refetchOnWindowFocus: false
   });
 
   // Category stats
@@ -131,11 +144,13 @@ const AdminDashboard = () => {
     queryFn: async () => {
       const res = await api.get('/items/category-stats');
       return res.data;
-    }
+    },
+    staleTime: 30000,
+    refetchOnWindowFocus: false
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="p-6 bg-gray-900 min-h-screen">
       {/* Welcome Message */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -146,7 +161,7 @@ const AdminDashboard = () => {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
-          className="text-5xl font-bold mb-4 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent"
+          className="text-5xl font-bold mb-4 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent"
         >
           Welcome Back, Admin
         </motion.h1>
@@ -154,7 +169,7 @@ const AdminDashboard = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
-          className="text-gray-600 text-lg"
+          className="text-gray-400 text-lg"
         >
           Here's what's happening with your auction platform today
         </motion.p>
@@ -166,55 +181,55 @@ const AdminDashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center hover:shadow-xl transition-shadow duration-300"
+          className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center hover:shadow-xl transition-shadow duration-300"
         >
-          <UserGroupIcon className="w-8 h-8 text-indigo-600 mb-2" />
-          <div className="text-3xl font-bold text-indigo-700">{users.length}</div>
-          <div className="text-gray-600">Total Users</div>
+          <UserGroupIcon className="w-8 h-8 text-indigo-400 mb-2" />
+          <div className="text-3xl font-bold text-indigo-400">{users.length}</div>
+          <div className="text-gray-400">Total Users</div>
         </motion.div>
 
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center hover:shadow-xl transition-shadow duration-300"
+          className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center hover:shadow-xl transition-shadow duration-300"
         >
-          <CubeIcon className="w-8 h-8 text-indigo-600 mb-2" />
-          <div className="text-3xl font-bold text-indigo-700">{users.filter(u => u?.userStatus === 'ACTIVE').length}</div>
-          <div className="text-gray-600">Active Users</div>
+          <CubeIcon className="w-8 h-8 text-indigo-400 mb-2" />
+          <div className="text-3xl font-bold text-indigo-400">{users.filter(u => u?.userStatus === 'ACTIVE').length}</div>
+          <div className="text-gray-400">Active Users</div>
         </motion.div>
 
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center hover:shadow-xl transition-shadow duration-300"
+          className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center hover:shadow-xl transition-shadow duration-300"
         >
-          <ChartBarIcon className="w-8 h-8 text-indigo-600 mb-2" />
-          <div className="text-3xl font-bold text-indigo-700">{bidsStats.totalBids}</div>
-          <div className="text-gray-600">Total Bids</div>
+          <ChartBarIcon className="w-8 h-8 text-indigo-400 mb-2" />
+          <div className="text-3xl font-bold text-indigo-400">{bidsStats.totalBids}</div>
+          <div className="text-gray-400">Total Bids</div>
         </motion.div>
 
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center hover:shadow-xl transition-shadow duration-300"
+          className="bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center hover:shadow-xl transition-shadow duration-300"
         >
-          <CurrencyDollarIcon className="w-8 h-8 text-indigo-600 mb-2" />
-          <div className="text-3xl font-bold text-indigo-700">${revenue.toLocaleString()}</div>
-          <div className="text-gray-600">Total Revenue</div>
+          <CurrencyDollarIcon className="w-8 h-8 text-indigo-400 mb-2" />
+          <div className="text-3xl font-bold text-indigo-400">${revenue.toLocaleString()}</div>
+          <div className="text-gray-400">Total Revenue</div>
         </motion.div>
       </div>
 
       {/* Chart & Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Chart Section */}
-        <div className="bg-white rounded-xl shadow-lg p-6 col-span-2">
+        <div className="bg-gray-800 rounded-xl shadow-lg p-6 col-span-2">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center">
-              <ChartBarIcon className="w-6 h-6 text-indigo-600 mr-2" />
-              <span className="font-semibold text-lg text-gray-700">Bid Activity Overview</span>
+              <ChartBarIcon className="w-6 h-6 text-indigo-400 mr-2" />
+              <span className="font-semibold text-lg text-gray-300">Bid Activity Overview</span>
             </div>
             <div className="flex space-x-2">
               <button 
@@ -222,7 +237,7 @@ const AdminDashboard = () => {
                 className={`px-3 py-1 text-sm rounded-full transition-colors ${
                   timeRange === 'daily' 
                     ? 'bg-indigo-600 text-white' 
-                    : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
               >
                 Daily
@@ -232,97 +247,81 @@ const AdminDashboard = () => {
                 className={`px-3 py-1 text-sm rounded-full transition-colors ${
                   timeRange === 'monthly' 
                     ? 'bg-indigo-600 text-white' 
-                    : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
               >
                 Monthly
               </button>
-              <button 
-                onClick={() => setTimeRange('yearly')}
-                className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                  timeRange === 'yearly' 
-                    ? 'bg-indigo-600 text-white' 
-                    : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
-                }`}
-              >
-                Yearly
-              </button>
             </div>
           </div>
-          <div className="h-80">
-            {isBidHistoryLoading ? (
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="text-gray-500">Loading chart data...</div>
-              </div>
-            ) : bidHistoryError ? (
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="text-red-500">Error loading chart data: {bidHistoryError.message}</div>
-              </div>
-            ) : chartData.length === 0 ? (
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="text-gray-500">No bid data available</div>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={chartData}
-                  margin={{
-                    top: 5,
-                    right: 30,
-                    left: 20,
-                    bottom: 5,
-                  }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                  <XAxis 
-                    dataKey="date" 
-                    stroke="#6B7280"
-                    tick={{ fill: '#6B7280' }}
-                  />
-                  <YAxis 
-                    yAxisId="left"
-                    stroke="#6B7280"
-                    tick={{ fill: '#6B7280' }}
-                  />
-                  <YAxis 
-                    yAxisId="right"
-                    orientation="right"
-                    stroke="#6B7280"
-                    tick={{ fill: '#6B7280' }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'white',
-                      border: '1px solid #E5E7EB',
-                      borderRadius: '0.5rem',
-                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                    }}
-                  />
-                  <Legend />
-                  <Line
-                    yAxisId="left"
-                    type="monotone"
-                    dataKey="bids"
-                    name="Number of Bids"
-                    stroke="#4F46E5"
-                    strokeWidth={2}
-                    dot={{ fill: '#4F46E5', strokeWidth: 2 }}
-                    activeDot={{ r: 8, fill: '#4F46E5' }}
-                  />
-                  <Line
-                    yAxisId="right"
-                    type="monotone"
-                    dataKey="revenue"
-                    name="Revenue ($)"
-                    stroke="#10B981"
-                    strokeWidth={2}
-                    dot={{ fill: '#10B981', strokeWidth: 2 }}
-                    activeDot={{ r: 8, fill: '#10B981' }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
+          {isBidHistoryLoading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-gray-400">Loading chart data...</div>
+            </div>
+          ) : bidHistoryError ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-red-400">Error loading chart data</div>
           </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={400}>
+              <LineChart
+                data={chartData}
+                margin={{
+                  top: 5,
+                  right: 30,
+                  left: 20,
+                  bottom: 5,
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="#9CA3AF"
+                  tick={{ fill: '#9CA3AF' }}
+                />
+                <YAxis 
+                  yAxisId="left"
+                  stroke="#9CA3AF"
+                  tick={{ fill: '#9CA3AF' }}
+                />
+                <YAxis 
+                  yAxisId="right"
+                  orientation="right"
+                  stroke="#9CA3AF"
+                  tick={{ fill: '#9CA3AF' }}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#1F2937',
+                    border: '1px solid #374151',
+                    borderRadius: '0.5rem',
+                    color: '#F3F4F6'
+                  }}
+                />
+                <Legend />
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="bids"
+                  name="Number of Bids"
+                  stroke="#818CF8"
+                  strokeWidth={2}
+                  dot={{ fill: '#818CF8', strokeWidth: 2 }}
+                  activeDot={{ r: 8, fill: '#818CF8' }}
+                />
+                <Line
+                  yAxisId="right"
+                  type="monotone"
+                  dataKey="revenue"
+                  name="Revenue ($)"
+                  stroke="#34D399"
+                  strokeWidth={2}
+                  dot={{ fill: '#34D399', strokeWidth: 2 }}
+                  activeDot={{ r: 8, fill: '#34D399' }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
         </div>
 
         {/* Quick Stats */}
@@ -331,12 +330,12 @@ const AdminDashboard = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.6 }}
-            className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg p-6 text-white"
+            className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl shadow-lg p-6 text-white"
           >
             <div className="flex items-center justify-between mb-4">
               <TrophyIcon className="w-8 h-8" />
               <span className="text-2xl font-bold">Top Categories</span>
-            </div>
+          </div>
             <ul className="space-y-3">
               {Object.entries(categoryStats).map(([category, count]) => (
                 <li key={category} className="flex items-center justify-between">
@@ -354,52 +353,49 @@ const AdminDashboard = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.7 }}
-            className="bg-white rounded-xl shadow-lg p-6"
+            className="bg-gray-800 rounded-xl shadow-lg p-6"
           >
-            <div className="flex items-center mb-4">
-              <TagIcon className="w-6 h-6 text-indigo-600 mr-2" />
-              <span className="font-semibold text-lg text-gray-700">Popular Items</span>
-            </div>
+            <div className="font-semibold text-lg text-gray-300 mb-4">Popular Items</div>
             <ul className="space-y-3">
               {popularItems.map(item => (
-                <li key={item.itemId} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors">
-                  <span className="text-gray-600">{item.title}</span>
-                  <span className="text-indigo-600 font-medium">${item.currentHighestBid?.toLocaleString() || item.startingPrice?.toLocaleString() || '0'}</span>
+                <li key={item.id} className="flex items-center justify-between">
+                  <span className="text-gray-400">{item.title}</span>
+                  <span className="text-indigo-400 font-semibold">{item.bidCount} bids</span>
                 </li>
               ))}
               {popularItems.length === 0 && (
-                <li className="text-center text-gray-500">No popular items available</li>
+                <li className="text-center text-gray-400">No popular items data available</li>
               )}
-            </ul>
+          </ul>
           </motion.div>
         </div>
       </div>
 
-      {/* Recent Activity */}
+      {/* Recent Users */}
       <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="bg-white rounded-xl shadow-lg p-6"
+          className="bg-gray-800 rounded-xl shadow-lg p-6"
         >
-          <div className="font-semibold text-lg text-gray-700 mb-4">Recent Users</div>
-          <ul className="divide-y divide-gray-100">
+          <div className="font-semibold text-lg text-gray-300 mb-4">Recent Users</div>
+          <ul className="divide-y divide-gray-700">
             {recentUsers.length === 0 && <li className="text-gray-400 py-2">No recent users.</li>}
             {recentUsers.map(u => (
-              <li key={u?.userId || Math.random()} className="py-3 flex items-center space-x-3 hover:bg-gray-50 px-2 rounded-lg transition-colors">
-                <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                  <span className="text-indigo-600 font-medium">
+              <li key={u?.userId || Math.random()} className="py-3 flex items-center space-x-3 hover:bg-gray-700 px-2 rounded-lg transition-colors">
+                <div className="w-10 h-10 bg-indigo-900 rounded-full flex items-center justify-center">
+                  <span className="text-indigo-400 font-medium">
                     {u?.username ? u.username.charAt(0).toUpperCase() : '?'}
                   </span>
                 </div>
                 <div className="flex-1">
-                  <div className="font-medium text-gray-900">{u?.username || 'Unknown User'}</div>
-                  <div className="text-sm text-gray-500">{u?.email || 'No email'}</div>
+                  <div className="font-medium text-gray-300">{u?.username || 'Unknown User'}</div>
+                  <div className="text-sm text-gray-400">{u?.email || 'No email'}</div>
                 </div>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-400">
                   {u?.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}
-                </div>
+        </div>
               </li>
             ))}
           </ul>

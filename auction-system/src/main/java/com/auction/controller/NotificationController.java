@@ -10,6 +10,7 @@ import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/notifications")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"}, methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.PATCH})
 public class NotificationController {
     private final NotificationService notificationService;
 

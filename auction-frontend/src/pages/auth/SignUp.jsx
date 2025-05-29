@@ -77,87 +77,87 @@ const SignUp = () => {
 
       <form onSubmit={formik.handleSubmit} className="mt-8 space-y-6">
         <div className="space-y-4">
-          <div>
+        <div>
             <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-              Username
-            </label>
+            Username
+          </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <FiUser className="h-5 w-5 text-gray-400" />
               </div>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                autoComplete="username"
-                required
+          <input
+            id="username"
+            name="username"
+            type="text"
+            autoComplete="username"
+            required
                 className={`pl-10 block w-full rounded-lg border ${
                   formik.touched.username && formik.errors.username
                     ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                     : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
                 } shadow-sm focus:outline-none focus:ring-2 transition-colors duration-200`}
-                value={formik.values.username}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
+            value={formik.values.username}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+          />
             </div>
-            {formik.touched.username && formik.errors.username && (
+          {formik.touched.username && formik.errors.username && (
               <p className="mt-1 text-sm text-red-600">{formik.errors.username}</p>
-            )}
-          </div>
+          )}
+        </div>
 
-          <div>
+        <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
+            Email
+          </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <FiMail className="h-5 w-5 text-gray-400" />
               </div>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
                 className={`pl-10 block w-full rounded-lg border ${
                   formik.touched.email && formik.errors.email
                     ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                     : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
                 } shadow-sm focus:outline-none focus:ring-2 transition-colors duration-200`}
-                value={formik.values.email}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
+            value={formik.values.email}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+          />
             </div>
-            {formik.touched.email && formik.errors.email && (
+          {formik.touched.email && formik.errors.email && (
               <p className="mt-1 text-sm text-red-600">{formik.errors.email}</p>
-            )}
-          </div>
+          )}
+        </div>
 
-          <div>
+        <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
+            Password
+          </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <FiLock className="h-5 w-5 text-gray-400" />
               </div>
-              <input
-                id="password"
-                name="password"
+          <input
+            id="password"
+            name="password"
                 type={showPassword ? "text" : "password"}
-                autoComplete="new-password"
-                required
+            autoComplete="new-password"
+            required
                 className={`pl-10 block w-full rounded-lg border ${
                   formik.touched.password && formik.errors.password
                     ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                     : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
                 } shadow-sm focus:outline-none focus:ring-2 transition-colors duration-200`}
-                value={formik.values.password}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
+            value={formik.values.password}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+          />
               <button
                 type="button"
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
@@ -170,34 +170,34 @@ const SignUp = () => {
                 )}
               </button>
             </div>
-            {formik.touched.password && formik.errors.password && (
+          {formik.touched.password && formik.errors.password && (
               <p className="mt-1 text-sm text-red-600">{formik.errors.password}</p>
-            )}
-          </div>
+          )}
+        </div>
 
-          <div>
+        <div>
             <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-              Confirm Password
-            </label>
+            Confirm Password
+          </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <FiLock className="h-5 w-5 text-gray-400" />
               </div>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
+          <input
+            id="confirmPassword"
+            name="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
-                autoComplete="new-password"
-                required
+            autoComplete="new-password"
+            required
                 className={`pl-10 block w-full rounded-lg border ${
                   formik.touched.confirmPassword && formik.errors.confirmPassword
                     ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                     : 'border-gray-300 focus:ring-primary-500 focus:border-primary-500'
                 } shadow-sm focus:outline-none focus:ring-2 transition-colors duration-200`}
-                value={formik.values.confirmPassword}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
+            value={formik.values.confirmPassword}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+          />
               <button
                 type="button"
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
@@ -210,20 +210,20 @@ const SignUp = () => {
                 )}
               </button>
             </div>
-            {formik.touched.confirmPassword && formik.errors.confirmPassword && (
+          {formik.touched.confirmPassword && formik.errors.confirmPassword && (
               <p className="mt-1 text-sm text-red-600">{formik.errors.confirmPassword}</p>
-            )}
+          )}
           </div>
         </div>
 
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          type="submit"
-          disabled={formik.isSubmitting}
+            type="submit"
+            disabled={formik.isSubmitting}
           className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 transition-colors duration-200"
-        >
-          {formik.isSubmitting ? 'Creating Account...' : 'Create Account'}
+          >
+            {formik.isSubmitting ? 'Creating Account...' : 'Create Account'}
         </motion.button>
 
         <div className="text-center">

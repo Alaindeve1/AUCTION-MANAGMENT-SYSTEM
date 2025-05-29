@@ -88,8 +88,6 @@ const Items = () => {
       setLoading(true);
       console.log('Fetching items with status:', statusTab);
       
-      console.log('Attempting to fetch items from backend endpoint:', `/items/status/${statusTab}`);
-
       const response = await api.get(`/items/status/${statusTab}`);
       console.log('Raw API Response:', response);
       console.log('API Response data:', response.data);
@@ -104,40 +102,25 @@ const Items = () => {
         itemsData = [];
       }
 
-      console.log('Processed items data:', itemsData);
+      // Filter out invalid items
+      const validItems = itemsData.filter(item => item && item.itemId);
+      console.log('Valid items:', validItems);
       
       // Initialize current bids from the fetched items
       const initialBids = {};
-      itemsData.forEach(item => {
-        if (!item) {
-          console.warn('Null or undefined item found in response');
-          return;
-        }
-        
-        console.log('Processing item:', item);
-        
-        if (item.currentBid) {
-          initialBids[item.id] = {
-            amount: item.currentBid,
-            bidderId: item.highestBidder,
-            bidderName: item.highestBidderName || 'Anonymous',
-            timestamp: new Date().toISOString()
-          };
-        } else {
-          // Set initial bid to starting price if no bids yet
-          initialBids[item.id] = {
-            amount: item.startingPrice,
-            bidderId: null,
-            bidderName: 'No bids yet',
-            timestamp: null
-          };
-        }
+      validItems.forEach(item => {
+        initialBids[item.itemId] = {
+          amount: item.currentHighestBid || item.startingPrice || 0,
+          bidderId: item.highestBidder,
+          bidderName: item.highestBidderName || 'No bids yet',
+          timestamp: new Date().toISOString()
+        };
       });
       
       console.log('Initial bids:', initialBids);
       setCurrentBids(initialBids);
-      setItems(itemsData);
-      setTotalCount(itemsData.length);
+      setItems(validItems);
+      setTotalCount(validItems.length);
     } catch (error) {
       console.error('Error fetching items:', error);
       toast.error('Failed to fetch items');
@@ -229,29 +212,33 @@ const Items = () => {
     }
   }, [currentUser]);
 
+  // Single useEffect for WebSocket subscriptions
   useEffect(() => {
-    fetchItems();
-    fetchCategories();
+    if (!isConnected) {
+      console.log('WebSocket not connected, skipping subscriptions');
+      return;
+    }
 
+    console.log('Setting up WebSocket subscriptions');
+    
     // Subscribe to general bid updates
     const unsubscribeGeneral = subscribeToBidUpdates(handleBidUpdate);
 
     // Subscribe to item-specific bid updates
-    items.forEach(item => {
-      if (!item || !item.id) {
-        console.warn('Invalid item found in items array:', item);
-        return;
-      }
-      
-      console.log(`Setting up subscription for item ${item.id}`);
-      if (!itemSubscriptions.current.has(item.id)) {
-        const unsubscribe = subscribeToItemBidUpdates(item.id, handleBidUpdate);
-        itemSubscriptions.current.set(item.id, unsubscribe);
+    const validItems = items.filter(item => item && item.itemId);
+    console.log('Setting up subscriptions for valid items:', validItems);
+    
+    validItems.forEach(item => {
+      if (!itemSubscriptions.current.has(item.itemId)) {
+        console.log(`Setting up subscription for item ${item.itemId}`);
+        const unsubscribe = subscribeToItemBidUpdates(item.itemId, handleBidUpdate);
+        itemSubscriptions.current.set(item.itemId, unsubscribe);
       }
     });
 
+    // Cleanup function
     return () => {
-      // Cleanup all subscriptions
+      console.log('Cleaning up all WebSocket subscriptions');
       unsubscribeGeneral();
       itemSubscriptions.current.forEach((unsubscribe, itemId) => {
         console.log(`Cleaning up subscription for item ${itemId}`);
@@ -259,53 +246,7 @@ const Items = () => {
       });
       itemSubscriptions.current.clear();
     };
-  }, [statusTab, subscribeToBidUpdates, subscribeToItemBidUpdates, handleBidUpdate]);
-
-  // Update subscriptions when items change
-  useEffect(() => {
-    // Unsubscribe from removed items
-    itemSubscriptions.current.forEach((unsubscribe, itemId) => {
-      if (!items.find(item => item && item.id === itemId)) {
-        console.log(`Removing subscription for removed item ${itemId}`);
-        unsubscribe();
-        itemSubscriptions.current.delete(itemId);
-      }
-    });
-
-    // Subscribe to new items
-    items.forEach(item => {
-      if (!item || !item.id) {
-        console.warn('Invalid item found in items array:', item);
-        return;
-      }
-      
-      if (!itemSubscriptions.current.has(item.id)) {
-        console.log(`Adding subscription for new item ${item.id}`);
-        const unsubscribe = subscribeToItemBidUpdates(item.id, handleBidUpdate);
-        itemSubscriptions.current.set(item.id, unsubscribe);
-      }
-    });
-  }, [items, subscribeToItemBidUpdates, handleBidUpdate]);
-
-  useEffect(() => {
-    if (!items.length) return;
-
-    // Subscribe to updates for each item
-    items.forEach(item => {
-      if (!itemSubscriptions.current.has(item.id)) {
-        const unsubscribe = subscribeToItemBidUpdates(item.id, handleBidUpdate);
-        itemSubscriptions.current.set(item.id, unsubscribe);
-      }
-    });
-
-    // Clean up subscriptions when component unmounts or items change
-    return () => {
-      itemSubscriptions.current.forEach(unsubscribe => {
-        if (unsubscribe) unsubscribe();
-      });
-      itemSubscriptions.current.clear();
-    };
-  }, [items, subscribeToItemBidUpdates, handleBidUpdate]);
+  }, [items, isConnected, subscribeToBidUpdates, subscribeToItemBidUpdates, handleBidUpdate]);
 
   useEffect(() => {
     fetchItems();

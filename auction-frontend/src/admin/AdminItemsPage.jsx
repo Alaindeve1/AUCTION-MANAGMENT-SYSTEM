@@ -199,7 +199,7 @@ const AdminItemsPage = () => {
         {/* Cards layout with animation */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-8 animate__animated animate__fadeInUp">
           {paginatedItems.map(item => (
-            <div key={item.itemId} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+            <div key={item.itemId} className="bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
               <div className="relative h-48">
                   {item.imageUrl ? (
                   <img
@@ -208,36 +208,36 @@ const AdminItemsPage = () => {
                     className="w-full h-full object-cover"
                   />
                   ) : (
-                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                  <div className="w-full h-full bg-gray-700 flex items-center justify-center">
                       <span className="text-gray-400">No image</span>
                     </div>
                   )}
                 <div className="absolute top-2 right-2">
                   <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                    item.itemStatus === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-                    item.itemStatus === 'ENDED' ? 'bg-red-100 text-red-800' :
-                    item.itemStatus === 'SOLD' ? 'bg-purple-100 text-purple-800' :
-                    'bg-gray-100 text-gray-800'
+                    item.itemStatus === 'ACTIVE' ? 'bg-green-900 text-green-200' :
+                    item.itemStatus === 'ENDED' ? 'bg-red-900 text-red-200' :
+                    item.itemStatus === 'SOLD' ? 'bg-purple-900 text-purple-200' :
+                    'bg-gray-700 text-gray-200'
                   }`}>
                     {item.itemStatus}
                   </span>
                 </div>
               </div>
               <div className="p-4">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">{item.title}</h3>
-                <p className="text-gray-600 text-sm mb-2 line-clamp-2">{item.description}</p>
+                <h3 className="text-lg font-semibold text-gray-200 mb-2">{item.title}</h3>
+                <p className="text-gray-400 text-sm mb-2 line-clamp-2">{item.description}</p>
                 <div className="flex justify-between items-center">
-                  <span className="text-indigo-600 font-semibold">${item.startingPrice}</span>
+                  <span className="text-indigo-400 font-semibold">${item.startingPrice}</span>
                   <div className="space-x-2">
                 <button
                   onClick={() => handleEdit(item)}
-                      className="text-blue-600 hover:text-blue-800"
+                      className="text-blue-400 hover:text-blue-200"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => handleDelete(item.itemId)}
-                      className="text-red-600 hover:text-red-800"
+                      className="text-red-400 hover:text-red-200"
                 >
                   Delete
                 </button>

@@ -112,54 +112,54 @@ const AdminBidsPage = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="bg-gray-800 rounded-xl shadow-lg p-6">
           <div className="flex items-center">
-            <div className="p-3 bg-indigo-100 rounded-lg">
-              <ChartBarIcon className="h-6 w-6 text-indigo-600" />
+            <div className="p-3 bg-indigo-900 rounded-lg">
+              <ChartBarIcon className="h-6 w-6 text-indigo-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Bids</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.totalBids}</p>
+              <p className="text-sm font-medium text-gray-400">Total Bids</p>
+              <p className="text-2xl font-semibold text-gray-200">{stats.totalBids}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="bg-gray-800 rounded-xl shadow-lg p-6">
           <div className="flex items-center">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <CurrencyDollarIcon className="h-6 w-6 text-green-600" />
+            <div className="p-3 bg-green-900 rounded-lg">
+              <CurrencyDollarIcon className="h-6 w-6 text-green-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Value</p>
-              <p className="text-2xl font-semibold text-gray-900">{formatCurrency(stats.totalValue)}</p>
+              <p className="text-sm font-medium text-gray-400">Total Value</p>
+              <p className="text-2xl font-semibold text-gray-200">{formatCurrency(stats.totalValue)}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="bg-gray-800 rounded-xl shadow-lg p-6">
           <div className="flex items-center">
-            <div className="p-3 bg-yellow-100 rounded-lg">
-              <ClockIcon className="h-6 w-6 text-yellow-600" />
+            <div className="p-3 bg-yellow-900 rounded-lg">
+              <ClockIcon className="h-6 w-6 text-yellow-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Active Auctions</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.activeAuctions}</p>
+              <p className="text-sm font-medium text-gray-400">Active Auctions</p>
+              <p className="text-2xl font-semibold text-gray-200">{stats.activeAuctions}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="bg-gray-800 rounded-xl shadow-lg p-6">
           <div className="flex items-center">
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <UserGroupIcon className="h-6 w-6 text-purple-600" />
+            <div className="p-3 bg-purple-900 rounded-lg">
+              <UserGroupIcon className="h-6 w-6 text-purple-400" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Unique Bidders</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.uniqueBidders}</p>
+              <p className="text-sm font-medium text-gray-400">Unique Bidders</p>
+              <p className="text-2xl font-semibold text-gray-200">{stats.uniqueBidders}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <div className="bg-gray-800 rounded-xl shadow-lg p-6">
         <form onSubmit={handleSearch} className="space-y-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
@@ -170,7 +170,7 @@ const AdminBidsPage = () => {
                   value={filters.search}
                   onChange={handleFilterChange}
                   placeholder="Search by item or bidder..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-700 text-gray-200"
                 />
                 <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" />
               </div>
@@ -180,7 +180,7 @@ const AdminBidsPage = () => {
                 name="status"
                 value={filters.status}
                 onChange={handleFilterChange}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="px-4 py-2 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-700 text-gray-200"
               >
                 <option value="all">All Status</option>
                 <option value="winning">Winning Bids</option>
@@ -195,7 +195,7 @@ const AdminBidsPage = () => {
                   maxAmount: '',
                   status: 'all'
                 })}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-4 py-2 text-gray-200 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
               >
                 Reset
               </button>
@@ -209,7 +209,7 @@ const AdminBidsPage = () => {
                 value={filters.minAmount}
                 onChange={handleFilterChange}
                 placeholder="Min Amount"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-4 py-2 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-700 text-gray-200"
               />
             </div>
             <div className="flex-1">
@@ -219,7 +219,7 @@ const AdminBidsPage = () => {
                 value={filters.maxAmount}
                 onChange={handleFilterChange}
                 placeholder="Max Amount"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-4 py-2 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-700 text-gray-200"
               />
             </div>
           </div>
@@ -235,50 +235,50 @@ const AdminBidsPage = () => {
       ) : error ? (
         <div className="text-center py-8 text-red-600 bg-red-50 rounded-lg">{error}</div>
       ) : (
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-gray-800 rounded-xl shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-700">
+              <thead className="bg-gray-900">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bidder</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Item</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Bidder</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Time</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-gray-800 divide-y divide-gray-700">
                 {filteredBids.map(bid => (
-                  <tr key={bid.bidId} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{bid.itemTitle}</div>
+                  <tr key={bid.bidId} className="hover:bg-gray-700">
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-200">
+                      <div className="text-sm font-medium">{bid.itemTitle}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{bid.bidderUsername}</div>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-200">
+                      <div className="text-sm">{bid.bidderUsername}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{formatCurrency(bid.bidAmount)}</div>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-200">
+                      <div className="text-sm">{formatCurrency(bid.bidAmount)}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">{formatDate(bid.bidTime)}</div>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-400">
+                      <div className="text-sm">{formatDate(bid.bidTime)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         bid.isWinningBid 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-gray-100 text-gray-800'
+                          ? 'bg-green-900 text-green-200' 
+                          : 'bg-gray-700 text-gray-200'
                       }`}>
                         {bid.isWinningBid ? 'Winning' : 'Outbid'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <button
                         onClick={() => {
                           setSelectedBid(bid);
                           setShowDetails(true);
                         }}
-                        className="text-indigo-600 hover:text-indigo-900"
+                        className="text-indigo-400 hover:text-indigo-200"
                       >
                         View Details
                       </button>

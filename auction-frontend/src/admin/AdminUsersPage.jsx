@@ -154,9 +154,9 @@ const AdminUsersPage = () => {
         <div className="text-center py-8 text-red-600">{error}</div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-white rounded-xl shadow">
+          <table className="min-w-full bg-gray-800 rounded-xl shadow">
             <thead>
-              <tr className="bg-indigo-50 text-indigo-700">
+              <tr className="bg-gray-700 text-gray-300">
                 <th className="px-4 py-2 text-left">Username</th>
                 <th className="px-4 py-2 text-left">Email</th>
                 <th className="px-4 py-2 text-left">Role</th>
@@ -169,34 +169,34 @@ const AdminUsersPage = () => {
               {filteredUsers.map(user => {
                 console.log('Rendering user:', user);
                 return (
-                <tr key={user?.id || Math.random()} className="border-b hover:bg-gray-50">
-                  <td className="px-4 py-2">{user?.username || 'N/A'}</td>
-                  <td className="px-4 py-2">{user?.email || 'N/A'}</td>
+                <tr key={user?.id || Math.random()} className="border-b border-gray-700 hover:bg-gray-700">
+                  <td className="px-4 py-2 text-gray-300">{user?.username || 'N/A'}</td>
+                  <td className="px-4 py-2 text-gray-300">{user?.email || 'N/A'}</td>
                   <td className="px-4 py-2">
                     <span className={`px-2 py-1 rounded-full text-sm ${
-                      user?.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                      user?.role === 'ADMIN' ? 'bg-purple-900 text-purple-200' : 'bg-blue-900 text-blue-200'
                     }`}>
                       {user?.role || 'USER'}
                     </span>
                   </td>
                   <td className="px-4 py-2">
                     <span className={`px-2 py-1 rounded-full text-sm ${
-                      user?.userStatus === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      user?.userStatus === 'ACTIVE' ? 'bg-green-900 text-green-200' : 'bg-red-900 text-red-200'
                     }`}>
                       {user?.userStatus || 'INACTIVE'}
                     </span>
                   </td>
-                  <td className="px-4 py-2">{formatDate(user?.createdAt)}</td>
+                  <td className="px-4 py-2 text-gray-300">{formatDate(user?.createdAt)}</td>
                   <td className="px-4 py-2 space-x-2">
                     <button
                       onClick={() => handleViewUser(user)}
-                      className="px-3 py-1 bg-indigo-500 text-white rounded hover:bg-indigo-600"
+                      className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700"
                     >
                       View
                     </button>
                     <button
                       onClick={() => handleDeleteUser(user?.userId)}
-                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                      className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
                     >
                       Delete
                     </button>
@@ -206,7 +206,7 @@ const AdminUsersPage = () => {
               })}
               {filteredUsers.length === 0 && (
                 <tr>
-                  <td colSpan="6" className="text-center py-8 text-gray-500">
+                  <td colSpan="6" className="text-center py-8 text-gray-400">
                     No users found
                   </td>
                 </tr>
@@ -219,30 +219,30 @@ const AdminUsersPage = () => {
       {/* User Details Modal */}
       {showModal && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-2xl">
+          <div className="bg-gray-800 rounded-xl shadow-lg p-8 w-full max-w-2xl">
             <div className="flex justify-between items-start mb-6">
-              <h2 className="text-xl font-bold text-indigo-700">User Details</h2>
+              <h2 className="text-xl font-bold text-indigo-400">User Details</h2>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-400 hover:text-gray-300"
               >
                 ✕
               </button>
             </div>
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <h3 className="font-semibold text-gray-700 mb-2">User Information</h3>
-                <p><span className="font-medium">Username:</span> {selectedUser?.username || 'N/A'}</p>
-                <p><span className="font-medium">Email:</span> {selectedUser?.email || 'N/A'}</p>
-                <p><span className="font-medium">Role:</span> {selectedUser?.role || 'USER'}</p>
-                <p><span className="font-medium">Status:</span> {selectedUser?.userStatus || 'INACTIVE'}</p>
-                <p><span className="font-medium">Joined:</span> {formatDate(selectedUser?.createdAt)}</p>
+                <h3 className="font-semibold text-gray-300 mb-2">User Information</h3>
+                <p className="text-gray-400"><span className="font-medium text-gray-300">Username:</span> {selectedUser?.username || 'N/A'}</p>
+                <p className="text-gray-400"><span className="font-medium text-gray-300">Email:</span> {selectedUser?.email || 'N/A'}</p>
+                <p className="text-gray-400"><span className="font-medium text-gray-300">Role:</span> {selectedUser?.role || 'USER'}</p>
+                <p className="text-gray-400"><span className="font-medium text-gray-300">Status:</span> {selectedUser?.userStatus || 'INACTIVE'}</p>
+                <p className="text-gray-400"><span className="font-medium text-gray-300">Joined:</span> {formatDate(selectedUser?.createdAt)}</p>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-700 mb-2">Activity Statistics</h3>
-                <p><span className="font-medium">Total Bids:</span> {userStats.totalBids}</p>
-                <p><span className="font-medium">Won Auctions:</span> {userStats.wonAuctions}</p>
-                <p><span className="font-medium">Active Bids:</span> {userStats.activeBids}</p>
+                <h3 className="font-semibold text-gray-300 mb-2">Activity Statistics</h3>
+                <p className="text-gray-400"><span className="font-medium text-gray-300">Total Bids:</span> {userStats.totalBids}</p>
+                <p className="text-gray-400"><span className="font-medium text-gray-300">Won Auctions:</span> {userStats.wonAuctions}</p>
+                <p className="text-gray-400"><span className="font-medium text-gray-300">Active Bids:</span> {userStats.activeBids}</p>
               </div>
             </div>
           </div>

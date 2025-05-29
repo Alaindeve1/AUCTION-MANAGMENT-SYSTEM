@@ -13,12 +13,17 @@ export const WebSocketProvider = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const pendingSubscriptions = useRef([]);
   const isConnecting = useRef(false);
+  const activeSubscriptions = useRef(new Map());
 
   const connect = useCallback(() => {
-    if (stompClient.current?.connected || isConnecting.current) return;
+    if (stompClient.current?.connected || isConnecting.current) {
+      console.log('WebSocket already connected or connecting');
+      return;
+    }
 
     try {
       isConnecting.current = true;
+      console.log('Opening Web Socket...');
       const socket = new SockJS('/ws');
       stompClient.current = new Client({
         webSocketFactory: () => socket,
@@ -61,6 +66,7 @@ export const WebSocketProvider = ({ children }) => {
                   console.error(`Error in subscription handler for ${destination}:`, error);
                 }
               });
+              activeSubscriptions.current.set(destination, subscription);
               pendingSubscriptions.current = pendingSubscriptions.current.filter(
                 sub => sub.destination !== destination
               );
@@ -73,6 +79,8 @@ export const WebSocketProvider = ({ children }) => {
           console.log('WebSocket disconnected');
           setIsConnected(false);
           isConnecting.current = false;
+          // Clear active subscriptions on disconnect
+          activeSubscriptions.current.clear();
         },
       });
 
@@ -108,6 +116,12 @@ export const WebSocketProvider = ({ children }) => {
     }
     
     try {
+      // Unsubscribe if already subscribed
+      if (activeSubscriptions.current.has(destination)) {
+        activeSubscriptions.current.get(destination).unsubscribe();
+        activeSubscriptions.current.delete(destination);
+      }
+
       const subscription = stompClient.current.subscribe(destination, (message) => {
         try {
           const data = JSON.parse(message.body);
@@ -117,7 +131,13 @@ export const WebSocketProvider = ({ children }) => {
       }
       });
       
-      return () => subscription.unsubscribe();
+      activeSubscriptions.current.set(destination, subscription);
+      return () => {
+        if (activeSubscriptions.current.has(destination)) {
+          activeSubscriptions.current.get(destination).unsubscribe();
+          activeSubscriptions.current.delete(destination);
+        }
+      };
     } catch (error) {
       console.error('Error subscribing to bid updates:', error);
       return () => {};
@@ -151,6 +171,12 @@ export const WebSocketProvider = ({ children }) => {
     }
     
     try {
+      // Unsubscribe if already subscribed
+      if (activeSubscriptions.current.has(destination)) {
+        activeSubscriptions.current.get(destination).unsubscribe();
+        activeSubscriptions.current.delete(destination);
+      }
+
       const subscription = stompClient.current.subscribe(destination, (message) => {
         try {
           const data = JSON.parse(message.body);
@@ -161,9 +187,12 @@ export const WebSocketProvider = ({ children }) => {
         }
       });
       
+      activeSubscriptions.current.set(destination, subscription);
       return () => {
-        console.log(`Unsubscribing from bid updates for item ${validItemId}`);
-        subscription.unsubscribe();
+        if (activeSubscriptions.current.has(destination)) {
+          activeSubscriptions.current.get(destination).unsubscribe();
+          activeSubscriptions.current.delete(destination);
+        }
       };
     } catch (error) {
       console.error(`Error subscribing to item ${validItemId} bid updates:`, error);

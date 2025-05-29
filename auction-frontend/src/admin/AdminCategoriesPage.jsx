@@ -184,9 +184,9 @@ const AdminCategoriesPage = () => {
       ) : error ? (
         <div className="text-center py-8 text-red-600 bg-red-50 rounded-lg">{error}</div>
       ) : (
-        <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="bg-gray-800 rounded-xl shadow-lg p-6">
           {categories.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-white">
               No categories found. Add your first category to get started.
             </div>
           ) : (
