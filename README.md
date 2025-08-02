@@ -81,7 +81,7 @@ Check out our live demo to see the Auction Management System in action:
    ```env
    VITE_API_BASE_URL=http://localhost:8080/api
    VITE_WS_URL=ws://localhost:8080/ws
-   VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+   
    ```
 
 4. **Start the development server**
