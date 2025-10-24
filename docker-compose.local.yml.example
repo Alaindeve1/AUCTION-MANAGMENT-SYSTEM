@@ -1,4 +1,7 @@
 # Docker Compose for local development
+# Copy this file to docker-compose.local.yml and fill in your local credentials
+# NEVER commit docker-compose.local.yml to version control!
+
 version: '3.8'
 
 services:
@@ -9,7 +12,7 @@ services:
     environment:
       POSTGRES_DB: auction_db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: your_local_db_password_here
     ports:
       - "5432:5432"
     volumes:
@@ -34,17 +37,17 @@ services:
       DB_PORT: 5432
       DB_NAME: auction_db
       DB_USERNAME: postgres
-      DB_PASSWORD: ${DB_PASSWORD}
+      DB_PASSWORD: your_local_db_password_here
       
       # JWT Configuration
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: your_jwt_secret_here
       
       # CORS Configuration
       CORS_ORIGINS: http://localhost:3000,http://localhost:5173
       
       # Email Configuration (optional)
-      MAIL_USERNAME: ${MAIL_USERNAME}
-      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_USERNAME: your_email@gmail.com
+      MAIL_PASSWORD: your_app_password_here
       
       # Upload directory
       UPLOAD_DIR: /app/uploads

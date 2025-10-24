@@ -20,6 +20,9 @@
 .env.*
 !.env.example
 
+# Docker Compose local files
+docker-compose.local.yml
+
 # Logs
 npm-debug.log*
 yarn-debug.log*
