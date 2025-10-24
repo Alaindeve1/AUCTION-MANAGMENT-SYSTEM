@@ -1,0 +1,17 @@
+# .dockerignore for backend
+target/
+!.mvn/wrapper/maven-wrapper.jar
+node_modules/
+uploads/
+*.class
+*.jar
+*.war
+*.ear
+.DS_Store
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+README.md
+
