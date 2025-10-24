@@ -16,6 +16,9 @@
 .env.development.local
 .env.test.local
 .env.production.local
+.env
+.env.*
+!.env.example
 
 # Logs
 npm-debug.log*
@@ -38,3 +41,11 @@ yarn-error.log*
 .mtj.tmp/
 hs_err_pid*
 target/ 
+
+# Uploads folder (large image files)
+uploads/
+!uploads/.gitkeep
+
+# Temporary files
+temp/
+*.tmp
