@@ -8,7 +8,7 @@ class WebSocketService {
 
   connect() {
     if (!this.socket) {
-      this.socket = io(process.env.REACT_APP_WS_URL || 'http://localhost:8080');
+      this.socket = io(import.meta.env.VITE_WS_URL || 'http://localhost:8080');
       
       this.socket.on('connect', () => {
         console.log('WebSocket connected');
