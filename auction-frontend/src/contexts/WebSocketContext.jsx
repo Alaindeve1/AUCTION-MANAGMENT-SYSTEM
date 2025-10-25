@@ -15,6 +15,9 @@ export const WebSocketProvider = ({ children }) => {
   const isConnecting = useRef(false);
   const activeSubscriptions = useRef(new Map());
 
+  // Get WebSocket URL from environment variable
+  const wsUrl = import.meta.env.VITE_WS_URL || 'http://localhost:8080';
+
   const connect = useCallback(() => {
     if (stompClient.current?.connected || isConnecting.current) {
       console.log('WebSocket already connected or connecting');
@@ -24,7 +27,7 @@ export const WebSocketProvider = ({ children }) => {
     try {
       isConnecting.current = true;
       console.log('Opening Web Socket...');
-      const socket = new SockJS('/ws');
+      const socket = new SockJS(`${wsUrl}/ws`);
       stompClient.current = new Client({
         webSocketFactory: () => socket,
         debug: (str) => {
