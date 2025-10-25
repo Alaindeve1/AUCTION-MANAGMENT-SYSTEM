@@ -43,6 +43,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
+
         // Use allowed origins from configuration instead of wildcard
         for (String origin : allowedOrigins) {
             config.addAllowedOriginPattern(origin);
