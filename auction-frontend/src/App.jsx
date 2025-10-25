@@ -6,7 +6,7 @@ import { AuthProvider } from './utils/auth';
 import { WebSocketProvider } from './contexts/WebSocketContext';
 import Layout from './components/Layout';
 import Login from './pages/auth/Login';
-import Signup from './pages/auth/Signup';
+import Signup from './pages/auth/SignUp';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
 import VerifyEmail from './pages/auth/VerifyEmail';
